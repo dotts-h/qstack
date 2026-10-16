@@ -1,0 +1,12 @@
+{
+  "name": "qstack",
+  "displayName": "qstack",
+  "version": "0.1.0",
+  "description": "Cursor plugin for QA work. Skills, rules, agents, and commands use Cursor's default folders.",
+  "author": {
+    "name": "Horia Cătălin Rădulescu",
+    "email": "horia.c.radulescu@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["qa", "testing", "qstack"]
+}
