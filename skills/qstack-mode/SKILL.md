@@ -50,12 +50,12 @@ Read the leaf skill before you apply it.
 **Execution and Meta.**
 
 - **Build the lever.** `../principle-build-the-lever/SKILL.md`. Prefer a script or a playbook a reviewer can rerun.
-- **Never block on the human.** `../principle-never-block-on-the-human/SKILL.md`. Proceed on reversible checks.
+- **Never block on the human.** `../principle-never-block-on-the-human/SKILL.md`. Proceed on reversible checks, except the QA calls it names.
 - **Encode lessons in structure.** `../principle-encode-lessons-in-structure/SKILL.md`. Put a recurring check in a script instead of a second copy of the rule.
 
 ## Autonomy
 
-Reversible checks, local test builds, read-only queries, and screenshots proceed without asking (`principle-never-block-on-the-human`). Always pause before destructive data operations, production writes, or external ticket creation when target configuration is ambiguous. Never merge pull requests.
+Reversible checks, local test builds, read-only queries, and screenshots proceed without asking (`principle-never-block-on-the-human`). A call that changes what counts as correct waits for a person, such as accepting a healed locator or updating a baseline. Always pause before destructive data operations, production writes, or external ticket creation when target configuration is ambiguous. Never merge pull requests.
 
 ## Subagents
 

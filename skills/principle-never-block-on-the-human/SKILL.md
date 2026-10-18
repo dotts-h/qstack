@@ -12,4 +12,5 @@ The human supervises asynchronously. Agents must stay unblocked. Make reasonable
 - Make the system self-healing. When you notice a problem, log it and fix it in the next round.
 - Irreversible actions still require confirmation. A force-push, deleting production data, and sending an external message are irreversible.
 - Reversible actions should proceed without blocking. Writing code, editing notes, and splitting tasks are reversible.
+- Some reversible QA calls still wait for a person, because each one changes what counts as correct. Accepting a healed locator or a repaired check, updating a visual or snapshot baseline, judging an assistive-technology outcome, and setting a production blast radius are such calls. Finish the work around each call, then present it with its evidence.
 - Product direction comes from the human. Execution should not block.
