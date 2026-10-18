@@ -45,7 +45,7 @@ Perform real user actions:
 - Navigate through app controls
 - Run a command when the user path is a CLI
 
-Prefer roles, labels, and stable selectors. Use coordinates only after a fresh screenshot.
+Prefer roles, labels, and stable selectors. Use coordinates only when the surface exposes no accessibility tree, and only after a fresh screenshot. For a browser target, follow [Browser targets](#browser-targets).
 
 Return each action and the observed state change.
 
@@ -138,6 +138,17 @@ The adapter must:
 - Keep captures outside the repository.
 - Support a fresh or reset state between repro runs.
 - Avoid production changes unless the user explicitly configured a safe test action.
+
+## Browser targets
+
+A web app adapter drives the page through Playwright MCP or the Playwright CLI.
+
+- Act on element refs from the latest accessibility snapshot. Refs expire with the snapshot, so take a new one after the page changes.
+- Never store a ref in a check or in the feature map. Store the role, label, or test-id locator instead. `locator.normalize()` turns a ref locator into one.
+- Screenshots and recordings are evidence. Do not pick an action target from a screenshot when the snapshot lists the element.
+- An interactive element with no role or accessible name in the snapshot is a testability gap and a candidate accessibility defect. Record it.
+- Never call `browser_run_code_unsafe`. The Playwright MCP README calls it RCE-equivalent.
+- Chrome DevTools MCP adds traces, network detail, and console output. Against private URLs, start it with `--no-performance-crux` and `--no-usage-statistics`. Both options are on by default, and CrUX lookups send trace URLs to Google. Also pass `--redact-network-headers` so that network tools redact sensitive headers.
 
 ## Environment translation
 
