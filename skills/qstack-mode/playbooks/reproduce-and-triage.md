@@ -8,11 +8,11 @@ Bundled skill paths are relative to `skills/qstack-mode/SKILL.md`.
 2. Name the expected final state. Name the broken final state. Do this before you drive the product.
 3. Load `../reproduce-issue/references/control-adapter.md` and the feature map it names. Invoke the skill the adapter names. If no map section covers the reported path, or a required capability is missing, emit `Blocked` and skip the remaining steps.
 4. Bring up the real UI, CLI, or service through the adapter. Confirm the app, workspace, account, data set, and feature state before you act.
-5. Drive the reported path with real input. Observe the state where the expected and broken results diverge. Reset enough state that the second run does not depend on leftovers from the first. Drive the same path again. State inspection may confirm an observation. It must not inject or force the symptom.
-6. Capture the broken final state on each run. A screenshot or recording is the evidence.
+5. Drive the reported path with real input. Observe the state where the expected and broken results diverge. Reset enough state that the next run does not depend on leftovers. Drive the same path again, for at least two runs in total. Record the runs as `Runs: K of N`, where K counts the runs that showed the broken state. State inspection may confirm an observation. It must not inject or force the symptom.
+6. Capture the final state on each run. A screenshot or recording is the evidence.
 7. Trace the path with `../how/SKILL.md`. Use `../why/SKILL.md` for regression history and defensive code. Separate measured facts from hypotheses.
 8. Classify the report and dedupe it with `../triage-defect/SKILL.md`. Do not invent a second marker format in this playbook.
-9. Write the verdict file. Include the outcome token, the evidence paths, and a label of `measured`, `inferred`, or `guess` on every claim. Run `node scripts/check-verdict.mjs <verdict.md>` from the plugin root. Fix every line it prints.
-10. Emit `Reproduced` only when the same broken state appeared on both independent runs. Emit `Could not reproduce` when the broken state does not appear on both runs. Emit `Blocked` when the adapter or the environment cannot perform the path.
+9. Write the verdict file in the format at `references/verdict-file.md`. Include the outcome token, the evidence paths, and a label of `measured`, `inferred`, or `guess` on every claim. Run `node scripts/check-verdict.mjs <verdict.md>` from the plugin root. Fix every line it prints.
+10. Emit `Reproduced` only when the same broken state appeared on at least two independent runs. Emit `Could not reproduce` when it appeared on fewer than two. Emit `Blocked` when the adapter or the environment cannot perform the path.
 
-**Reply.** The expected state, the broken state, whether that broken state appeared on both runs, the classification, the dedupe result, the outcome token, and the evidence paths.
+**Reply.** The expected state, the broken state, the runs as K of N, the classification, the dedupe result, the outcome token, and the evidence paths.

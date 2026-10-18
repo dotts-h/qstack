@@ -74,7 +74,7 @@ These files are the host tools.
 
 - `agents/qstack-agent.md` is the delegate for reproduction, verification, and forensic tasks.
 - `scripts/log.mjs` appends one phase decision to a log file.
-- `scripts/check-verdict.mjs` checks a written verdict file.
+- `scripts/check-verdict.mjs` checks a written verdict file against `skills/qstack-mode/references/verdict-file.md`. Run `node --test` from the plugin root to test it.
 
 ## Load it locally
 

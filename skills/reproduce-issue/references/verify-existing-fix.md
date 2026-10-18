@@ -25,7 +25,7 @@ Record:
 - Baseline revision
 - Patched revision
 - Pull request or commit URL
-- Build and environment inputs shared by both runs
+- Build and environment inputs shared by the baseline and patched builds
 
 Use regular `github.com` pull request links.
 
@@ -41,10 +41,11 @@ Through the configured control adapter:
 2. Confirm the correct app and environment.
 3. Run the reported path through real UI actions, or through the real CLI command when that is the user path.
 4. Observe the discriminating symptom.
-5. Reset and repeat it.
+5. Reset and repeat it. Record the runs as `Baseline runs: K of N`, where K counts the runs that showed the symptom.
 6. Capture baseline recording, screenshot, and state check.
+7. Run the checks that cover the touched feature and note which pass.
 
-If the symptom does not appear twice on the baseline, there is no baseline. Do not claim that the fix works.
+If K is below 2, there is no baseline. Do not claim that the fix works.
 
 Do not call internal state setters to force the symptom on either build.
 
@@ -53,10 +54,11 @@ Do not call internal state setters to force the symptom on either build.
 Build and run the pull request or fix commit with the same environment and data.
 
 1. Run the same path.
-2. Repeat it twice, with a reset between the attempts.
+2. Repeat it with a reset between runs until the run count meets the patched run rule in [`../../qstack-mode/references/verdict-file.md`](../../qstack-mode/references/verdict-file.md). Record the runs as `Patched runs: K of N`.
 3. Confirm that the broken state is gone.
 4. Confirm the expected state appears.
-5. Capture after recording, screenshot, and the same state check.
+5. Rerun the checks that passed on the baseline. Record each one that now fails in `Pass-to-fail:`, or write `none`.
+6. Capture after recording, screenshot, and the same state check.
 
 Do not stop at compilation or tests. The after result must come from a running patched app.
 
@@ -66,18 +68,18 @@ Return one structured result in the reproduce-issue verdict. Interactive session
 
 ### Confirmed
 
-The baseline reproduces twice and the patched build resolves it twice.
+The baseline reproduces on at least two runs, every patched run passes, the patched run count is high enough, and no check went from pass to fail.
 
-- Outcome is `Verified existing fix`.
+- Outcome is `Confirmed`.
 - Link the artifact.
 - Include the before and after result.
 - Open no pull request.
 
 ### Insufficient fix
 
-The symptom appears on both baseline and patched builds.
+The baseline reproduces, and a patched run still shows the symptom or a check went from pass to fail.
 
-- Outcome is `Existing fix insufficient`.
+- Outcome is `Insufficient fix`.
 - Link the artifact and say it did not resolve the symptom.
 - Open no competing pull request.
 

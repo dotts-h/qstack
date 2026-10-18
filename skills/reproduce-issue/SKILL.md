@@ -1,6 +1,6 @@
 ---
 name: reproduce-issue
-description: "Reproduce reported defects through the target app's real UI or CLI twice, verify existing fixes against baseline and patched builds, and emit a structured reproduction verdict. Use for /reproduce-issue."
+description: "Reproduce reported defects through the target app's real UI or CLI on at least two recorded runs, verify existing fixes against baseline and patched builds, and emit a checked verdict file. Use for /reproduce-issue."
 disable-model-invocation: true
 ---
 
@@ -19,7 +19,7 @@ Run the verdict text through [`../unslop/SKILL.md`](../unslop/SKILL.md) before y
 
 ## Hard rules
 
-- The discriminating symptom must appear twice, through the real surface, with a state reset between the attempts.
+- A `Reproduced` verdict needs the discriminating symptom on at least two runs through the real surface, with a state reset between runs. Count every run that reached the divergence, including the runs that did not show the symptom.
 - Name the correct final state and the broken final state before you call it reproduced.
 - State inspection may confirm an observation. It must not inject the symptom. Do not call internal state setters, hidden methods, storage writes, or DOM injection to create the symptom.
 - An existing pull request or commit switches the run to verify mode. Follow [`references/verify-existing-fix.md`](references/verify-existing-fix.md). Do not edit that artifact or open another pull request.
@@ -78,7 +78,7 @@ Inspect screenshots and video. Use read-only workers for code history, blast rad
 
 Trace the reported action with [`../how/SKILL.md`](../how/SKILL.md). Use [`../why/SKILL.md`](../why/SKILL.md) when the report looks like a regression or touches defensive code. Form competing cause hypotheses and name the evidence that would separate them. This pass prepares the reproduction. It is not a license to patch.
 
-## 4. Reproduce twice
+## 4. Reproduce on independent runs
 
 Bring the target up through the control adapter. Confirm the app, workspace, account, data set, and feature state from stable markers before acting.
 
@@ -90,13 +90,13 @@ Before calling it reproduced:
 2. Name the broken final state.
 3. Reach the point where they diverge.
 4. Observe the broken state.
-5. Reset enough state that the second attempt is independent. A reload of the same dirty session does not count.
-6. Repeat the same path and observe the same broken state again.
+5. Reset enough state that the next run is independent. A reload of the same dirty session does not count.
+6. Repeat the same path and record whether the same broken state appeared.
 7. Cross-check a real state value when one is available. Read it. Do not write it.
 
 An expected dialog, loading state, or setup step is not the bug. Capture the final state that distinguishes correct from broken behavior.
 
-Use the configured repro budget when one exists. Otherwise make the two confirmation attempts, plus only the extra tries those attempts need to reach the divergence. If the symptom does not appear twice, the outcome is `Could not reproduce`. If the environment cannot provide a required capability, the outcome is `Blocked`, and the verdict names what was missing.
+Use the configured repro budget when one exists. Otherwise make at least two runs. Record them as `Runs: K of N`, where N counts the runs that reached the divergence and K counts the runs that showed the broken state. A run that never reached the divergence is a driving problem. Fix the drive and do not count it. If K is below 2, the outcome is `Could not reproduce`. If the environment cannot provide a required capability, the outcome is `Blocked`, and the verdict names what was missing.
 
 Before declaring an environment block, restate the defect without platform-specific nouns and try a safe translation only when it tests the same behavior. Label translated evidence as translated. Hardware prompts, operating-system permission dialogs, device-only APIs, and unavailable account states may still be real blocks.
 
@@ -115,23 +115,11 @@ A read-only reviewer answers one question. Does the evidence show the discrimina
 
 When a fix pull request or commit exists, follow [`references/verify-existing-fix.md`](references/verify-existing-fix.md).
 
-The baseline must show the symptom twice. The patched build must show the correct final state twice. Both runs use the real surface. Do not stop at compilation or unit tests.
+The baseline must show the symptom on at least two runs. The patched build must pass every run, with enough runs for the baseline rate. An intermittent baseline needs more clean patched runs. Every run uses the real surface. Do not stop at compilation or unit tests.
 
 ## 7. Emit the verdict
 
-Use this shape.
-
-```text
-Outcome: Reproduced | Could not reproduce | Blocked | Verified existing fix | Existing fix insufficient | Inconclusive
-Surface: <UI path or CLI command>
-Correct final state: <what the user should see>
-Broken final state: <what distinguishes the bug>
-Attempt 1: <steps and observed state>
-Attempt 2: <steps and observed state after reset>
-Evidence: <screenshot and recording paths>
-Fix artifact: <url or none>
-Missing: <capability or fact, or none>
-```
+Write the verdict file in the format at [`../qstack-mode/references/verdict-file.md`](../qstack-mode/references/verdict-file.md). The outcome token is `Reproduced`, `Could not reproduce`, `Blocked`, `Confirmed`, `Insufficient fix`, or `Inconclusive`. Under `## Verdict`, add `Fix artifact: <url or none>` and `Missing: <capability or fact, or none>`. Run `node scripts/check-verdict.mjs <verdict.md>` from the plugin root and fix every line it prints.
 
 Interactive runs return that verdict and post nothing.
 

@@ -61,7 +61,7 @@ The adapter must expose ways to:
 - Invoke the adapter action names listed for that feature.
 - Interact with default, hover, focus-visible, active, disabled, loading, empty, error, selected, open, expanded, and feature-specific states when they apply.
 - Arrange a state through safe fixture data, permissions, flags, service responses, or supported test controls.
-- Reset the feature for a second independent repro attempt.
+- Reset the feature between independent repro runs.
 - Capture the screenshot, video, and read-only cross-check named by the feature map.
 
 Use roles, accessible names, ARIA relationships, stable component markers, and purpose-named data attributes. Never use generated CSS or StyleX classes, dynamic hashes, child indexes, or brittle DOM position.
@@ -136,7 +136,7 @@ The adapter must:
 - Bound retries.
 - Keep secrets out of logs and artifacts.
 - Keep captures outside the repository.
-- Support a fresh or reset state between the two repro attempts.
+- Support a fresh or reset state between repro runs.
 - Avoid production changes unless the user explicitly configured a safe test action.
 
 ## Environment translation

@@ -1,6 +1,6 @@
 ---
 name: qstack-mode
-description: "Run structured QA workflows in Cursor: test chartering, two-run real-surface reproduction, defect triage, baseline-versus-patch fix verification, regression and visual parity checks, release gating, and verification skill authoring. Use for /qstack-mode."
+description: "Run structured QA workflows in Cursor: test chartering, real-surface reproduction with recorded runs, defect triage, baseline-versus-patch fix verification, regression and visual parity checks, release gating, and verification skill authoring. Use for /qstack-mode."
 ---
 
 # Qstack mode
@@ -21,7 +21,7 @@ Before designing test cases or exploring, restate the testing mission via `../in
 
 What a diff could break outside the changed lines routes to `../blast-radius/SKILL.md`.
 
-Reproducing a bug requires driving the real UI, CLI, or service surface twice (`../reproduce-issue/SKILL.md`). State inspection confirms an observation and never injects the symptom.
+Reproducing a bug requires driving the real UI, CLI, or service surface on at least two independent runs, recorded as K of N (`../reproduce-issue/SKILL.md`). State inspection confirms an observation and never injects the symptom.
 
 Classifying a report or filing a defect uses `../triage-defect/SKILL.md`.
 
@@ -31,7 +31,7 @@ Locking down a bug with an executable test uses `../regression-pin/SKILL.md`.
 
 Every prose surface and defect report passes through `../unslop/SKILL.md`.
 
-Multi-step QA runs log each phase decision with `node scripts/log.mjs <logfile> <phase> <decision> <why> <evidence> <result>` and validate written verdict files with `node scripts/check-verdict.mjs <verdict.md>`. Run both commands from the plugin root.
+Multi-step QA runs log each phase decision with `node scripts/log.mjs <logfile> <phase> <decision> <why> <evidence> <result>`. Write verdict files in the format at `references/verdict-file.md` and validate them with `node scripts/check-verdict.mjs <verdict.md>`. Run both commands from the plugin root.
 
 ## Principles
 
