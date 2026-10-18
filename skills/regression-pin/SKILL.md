@@ -28,7 +28,7 @@ Prefer no new test over a bad test. A bad test mostly exercises mocks, encodes i
 ## Guardrails
 
 - Do not change tests merely to match a wrong implementation.
-- Never weaken an existing assertion unless the expected behavior has genuinely changed and the reason is clear.
+- Never weaken an existing assertion to make a check pass. Change an assertion only when the expected behavior changed on purpose and a person accepts the change in review.
 - Keep the regression check focused on the bug. Avoid broad fixture churn or unrelated coverage expansion.
 - If the bug is flaky, make the check deterministic where possible, and document the flake signal being locked down.
 - If the bug exposes a broader class of failures, land the focused regression path first, then consider sibling coverage.
