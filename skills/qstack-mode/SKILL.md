@@ -86,7 +86,7 @@ Open a todolist whose first items are the matched playbook's steps copied verbat
 
 - **Diagnose live.** `playbooks/diagnose-live.md`. A live CPU, heap, or CDP symptom.
 - **Diagnose trace.** `playbooks/diagnose-trace.md`. A captured cpuprofile, trace, or heapsnapshot.
-- **Visual parity.** `playbooks/visual-parity.md`. Screenshot comparison against a baseline, with a person judging each change.
+- **Visual parity.** `playbooks/visual-parity.md`. Screenshot comparison against a baseline revision, account, or environment, with a person judging each visual change.
 - **Characterization pin.** `playbooks/characterization-pin.md`. A snapshot of current behavior before structure moves.
 - **Regression lane.** `playbooks/regression-lane.md`. One load-bearing scenario on trunk and head.
 - **Flake triage.** `playbooks/flake-triage.md`. A red CI check to classify before any retrigger.

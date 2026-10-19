@@ -149,6 +149,7 @@ A web app adapter drives the page through the Playwright CLI, `playwright-cli`. 
 - A click waits until its target is visible, enabled, and stable. A click that times out on a disabled control is an observation about the product. Never force a click past that wait.
 - Use `eval` only to read state. Never use `run-code`, because arbitrary Playwright code can set the state under test.
 - Screenshots and recordings are evidence. Do not pick an action target from a screenshot when the snapshot lists the element.
+- A native dialog, such as an alert, appears in no screenshot and no video. Its evidence is the CLI's record of the dialog in the run log.
 - An interactive element with no role or accessible name in the snapshot is a testability gap and a candidate accessibility defect. Record it.
 - Video needs Playwright's ffmpeg build, which `playwright-cli install-browser ffmpeg` installs. After a failed `video-start`, `video-stop` still prints a file path, so check the file before you cite it.
 
