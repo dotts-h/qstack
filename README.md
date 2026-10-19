@@ -7,7 +7,7 @@ qstack is a Cursor plugin for QA engineering. The version in `.cursor-plugin/plu
 The entry points are `/qstack-mode` and `/setup-qstack`.
 
 - [`/qstack-mode`](skills/qstack-mode/SKILL.md) runs a structured QA workflow.
-- [`/setup-qstack`](skills/setup-qstack/SKILL.md) configures the model for each QA role. The same command sets the reasoning budget.
+- [`/setup-qstack`](skills/setup-qstack/SKILL.md) configures the models that the how and why skills give their subagents. The same command sets the reasoning budget.
 
 ## Playbooks
 

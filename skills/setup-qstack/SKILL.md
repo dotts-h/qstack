@@ -1,6 +1,6 @@
 ---
 name: setup-qstack
-description: 'Configure which models qstack uses per QA role and at what reasoning budget. Detects your available models and writes an always-applied rule that overrides the skill defaults. Use for /setup-qstack, "configure qstack models", "qstack budget", or changing qstack model choices.'
+description: 'Configure which models the qstack how and why skills give their subagents and at what reasoning budget. Detects your available models and writes an always-applied rule that overrides the skill defaults. Use for /setup-qstack, "configure qstack models", "qstack budget", or changing qstack model choices.'
 ---
 
 # Setup qstack
@@ -36,7 +36,7 @@ Every real slug written must be in the detected set. `inherit-parent` and `auto`
 
 ### 5. Write the rule
 
-Set `alwaysApply` to true in `~/.cursor/rules/qstack-models.mdc`. Include a `# budget` line with the chosen label and its target effort. For that line, `unlimited` pairs with max, `large` with xhigh, `medium` with high, and `small` with medium. Include one line per role, using the same labels qstack-mode uses. Overwrite the whole file so re-runs stay idempotent. Shape:
+Set `alwaysApply` to true in `~/.cursor/rules/qstack-models.mdc`. Include a `# budget` line with the chosen label and its target effort. For that line, `unlimited` pairs with max, `large` with xhigh, `medium` with high, and `small` with medium. Include one line per role, using the labels that the how and why skills read. Overwrite the whole file so re-runs stay idempotent. Shape:
 
 ```
 ---
@@ -46,17 +46,10 @@ alwaysApply: true
 # qstack model configuration. One line per role. Delete a line to fall back to the skill default.
 # `inherit-parent` or `auto` means the role runs on the parent chat model. Omit Task `model` for that role.
 # budget: large (xhigh)
-reproduce-and-triage: grok-4.7-xhigh-fast
-verify-fix-and-retest: grok-4.7-xhigh-fast
-regression-and-parity: grok-4.7-xhigh-fast
-release-gate: grok-4.7-xhigh-fast
-judgment and prose: claude-opus-5-5-xhigh
-hardest tasks: claude-opus-5-5-xhigh
 how explorer: grok-4.7-xhigh-fast
 how explainer: claude-opus-5-5-xhigh
 why investigators: grok-4.7-xhigh-fast
 why synthesizer: claude-opus-5-5-xhigh
-verification workers: grok-4.7-xhigh-fast
 ```
 
 ### 6. Confirm
