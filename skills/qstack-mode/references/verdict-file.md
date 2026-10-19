@@ -19,7 +19,7 @@ The outcome tokens are `Reproduced`, `Could not reproduce`, `Blocked`, `Confirme
 
 The first six are the outcomes of [the reproduce-issue skill](../../reproduce-issue/SKILL.md). Each of them adds two lines under `## Verdict`:
 
-- `Fix artifact:` holds the URL of the pull request or commit under test, or says `none`. Name a commit that has no URL by its SHA. `Confirmed` and `Insufficient fix` need the URL or the SHA.
+- `Fix artifact:` holds the URL of the pull request or commit under test, or says `none`. Name a commit that has no URL by its SHA. Backticks around the URL or the SHA are fine, and so is a markdown link to the URL. `Confirmed` and `Insufficient fix` need the URL or the SHA.
 - `Missing:` names the capability or fact that the run lacked, or says `none`. `Blocked` must name it.
 
 Outside code, use straight quotes and no long dashes.

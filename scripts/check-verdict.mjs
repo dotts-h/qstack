@@ -44,6 +44,7 @@ const NONE = /^none\.?$/i;
 const PLACEHOLDER = /^(n\/?a|no|nothing|nil|null|-+)\.?$/i;
 const URL_TOKEN = /^[a-z][a-z0-9+.-]*:\/\//i;
 const COMMIT_SHA = /^[0-9a-f]{7,40}(?![0-9a-z])/i;
+const WRAPPED = /^`([^`]+)`|^\[[^\]]*\]\(([^)\s]+)\)/;
 const PATH_TOKEN = /[\\/]|\.[A-Za-z][A-Za-z0-9]*$/;
 const LINE_SUFFIX = /:\d+(?::\d+)?$/;
 const LABEL = /\b(measured|inferred|guess)\b/i;
@@ -111,7 +112,11 @@ const RUN_RULES = {
 };
 
 const presenceOnly = () => [];
-const namesFix = (value) => URL_TOKEN.test(value) || COMMIT_SHA.test(value);
+const namesFix = (value) => {
+	const [, code, link] = value.match(WRAPPED) ?? [];
+	const artifact = code ?? link ?? value;
+	return URL_TOKEN.test(artifact) || COMMIT_SHA.test(artifact);
+};
 const linksFix = ({ fixArtifact }) => [
 	!namesFix(fixArtifact.value) && 'a fix verdict needs a URL or a commit SHA in "Fix artifact:"',
 ];

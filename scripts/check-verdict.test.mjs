@@ -371,6 +371,10 @@ test("Fix artifact holds a URL, a commit SHA, or none, and a fix verdict holds a
 	for (const near of ["9b7e3d", "9b7e3d0x", "9b7e3d0c1a2b3c4d5e6f708192a3b4c5d6e7f8090"]) {
 		assert.match(artifact(near).problems, /write a URL, a commit SHA, or "none"/, near);
 	}
+	for (const wrapped of [`\`${FIX_URL}\``, `[PR 123](${FIX_URL})`, "`9b7e3d0`"]) assert.equal(artifact(wrapped).status, 0, wrapped);
+	for (const prose of ["`PR 123`", "[PR 123](the review thread)"]) {
+		assert.match(artifact(prose).problems, /write a URL, a commit SHA, or "none"/, prose);
+	}
 	const insufficient = [ORDER, "Baseline runs: 2 of 2", "Patched runs: 1 of 3", "Pass-to-fail: none"];
 	assert.match(check(verdict("Insufficient fix", insufficient, undefined, unlinked)).problems, /a fix verdict needs a URL/);
 });
