@@ -240,6 +240,13 @@ test("Confirmed needs more clean patched runs after an intermittent baseline", (
 	assert.equal(check(fix("0 of 5")).status, 0);
 });
 
+test("Inconclusive records clean patched runs that fall short of the rule", () => {
+	const short = [ORDER, "Baseline runs: 2 of 4", "Patched runs: 0 of 3", "Pass-to-fail: none"];
+	const lines = [`Fix artifact: ${FIX_URL}`, "Missing: 2 more clean patched runs"];
+	assert.equal(check(verdict("Inconclusive", short, undefined, lines)).status, 0);
+	assert.match(check(verdict("Confirmed", short, undefined, lines)).problems, /a 2 of 4 baseline needs at least 5 patched runs/);
+});
+
 test("each run field appears once and counts are whole numbers", () => {
 	assert.match(check(verdict("PASS", [ORDER, "Runs: 5 of 5", "Runs: 0 of 2"])).problems, /Runs appears more than once/);
 	assert.match(check(verdict("Reproduced", [ORDER, "Runs: 2 of 3.9"])).problems, /must start with "K of N"/);

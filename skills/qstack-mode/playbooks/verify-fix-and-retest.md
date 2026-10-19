@@ -13,7 +13,7 @@ Bundled skill paths are relative to `skills/qstack-mode/SKILL.md`. Playbooks nam
 7. A live CPU, heap, or CDP symptom goes to `diagnose-live.md`. A captured cpuprofile, trace, or heapsnapshot goes to `diagnose-trace.md`.
 8. The after result comes from the running patched revision. Do not treat a compile, a unit test, or a code review as that result.
 9. Write the verdict file in the format at `references/verdict-file.md`. Run `node scripts/check-verdict.mjs <verdict.md>` from the plugin root until it prints `problems=0`.
-10. Emit `Confirmed` when the run record meets the `Confirmed` rule in `references/verdict-file.md`. Emit `Insufficient fix` when a patched run shows the symptom or a check went from pass to fail. Emit `Inconclusive` when the baseline does not reproduce, the patched revision cannot run, or the evidence does not show the discriminating state.
+10. Emit `Confirmed` when the run record meets the `Confirmed` rule in `references/verdict-file.md`. Emit `Insufficient fix` when a patched run shows the symptom or a check went from pass to fail. Emit `Inconclusive` when the baseline does not reproduce, the patched revision cannot run, the evidence does not show the discriminating state, or every patched run passed but too few ran to meet the patched run rule. In that last case, `Missing:` names how many more clean runs the rule needs.
 11. Stop both builds and remove temporary profiles. Do not discard user work. Do not discard the evidence you cite.
 
 **Reply.** The fix artifact, the baseline and patched runs as K of N, the pass-to-fail checks, the outcome token, and what was missing when the token is `Inconclusive` or `Blocked`.
