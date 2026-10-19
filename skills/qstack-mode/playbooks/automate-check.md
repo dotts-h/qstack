@@ -12,4 +12,4 @@ Bundled skill paths are relative to `skills/qstack-mode/SKILL.md`.
 6. Write a test file only under `.cursor/skills/verify-*/` or a test directory, and only when the operator asked for that file.
 7. Clean temporary data. Confirm every evidence path you will cite still exists after cleanup.
 
-**Reply.** The verification skill path, whether you created it or audited it, any pin you added, the cheap check that failed first, each repair with the run that still failed on the broken revision, and the evidence that survived cleanup.
+**Reply.** The verification skill path, whether you created it or audited it, any pin you added, the cheap check that failed first, each repair, the run that still failed on a revision with the bug for each repaired check that guards a known bug, and the evidence that survived cleanup.
