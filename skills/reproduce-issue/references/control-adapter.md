@@ -2,11 +2,11 @@
 
 The reproduce-issue skill does not know how to start or drive every app. The user must configure one control skill or adapter that implements this contract for the target app.
 
-Set its skill name in `control.skill_name`.
+Set its skill name in `control.skill_name`, in the settings file that [`settings.md`](../../qstack-mode/references/settings.md) describes.
 
 Set the completed user-facing feature map path in `control.feature_map_path`. Copy and fill [`feature-map.example.md`](./feature-map.example.md) outside this skill directory, for example to `.cursor/qstack/feature-map.md`, instead of editing the example.
 
-If the skill, feature map, or a required capability is absent, ambiguous, or incomplete, reproduction must fail closed.
+If the settings file, the skill, the feature map, or a required capability is absent, ambiguous, or incomplete, reproduction must fail closed.
 
 ## Required capabilities
 
@@ -98,7 +98,7 @@ The screenshot must show enough app chrome to prove that the correct app is unde
 
 ### Recording
 
-Start and stop a screen recording around the full repro path.
+Start and stop a recording around the full repro path. A video counts. So does a trace that holds a screencast, such as a Playwright trace. Screenshots alone do not count.
 
 Return:
 
@@ -107,7 +107,7 @@ Return:
 - Captured window or region
 - Whether audio or sensitive overlays were omitted
 
-The recording must show the discriminating final state, not only setup or a loading screen.
+The recording must show the discriminating final state, not only setup or a loading screen. Confirm the file exists and is not empty before you cite it.
 
 ### Cleanup
 
@@ -141,14 +141,18 @@ The adapter must:
 
 ## Browser targets
 
-A web app adapter drives the page through Playwright MCP or the Playwright CLI.
+A web app adapter drives the page through the Playwright CLI, `playwright-cli`. Its agent skill, installed with `playwright-cli install --skills`, documents its commands. When the app already runs at a URL, `playwright-cli` itself can be `control.skill_name`. When the app must be built or started first, write a project adapter skill that starts it and drives it through the CLI.
 
-- Act on element refs from the latest accessibility snapshot. Refs expire with the snapshot, so take a new one after the page changes.
-- Never store a ref in a check or in the feature map. Store the role, label, or test-id locator instead. `locator.normalize()` turns a ref locator into one.
+- Give each repro run its own named session, as in `playwright-cli -s=<run> open <url>`, and close it before the next run. A new session starts from an empty in-memory profile, which is the reset between runs.
+- Act on element refs from the latest snapshot. Refs expire with the snapshot, so take a new one after the page changes.
+- Never store a ref in a check or in the feature map. The CLI prints the Playwright code behind each action. Store the role, label, or test-id locator that code names.
+- A click waits until its target is visible, enabled, and stable. A click that times out on a disabled control is an observation about the product. Never force a click past that wait.
+- Use `eval` only to read state. Never use `run-code`, because arbitrary Playwright code can set the state under test.
 - Screenshots and recordings are evidence. Do not pick an action target from a screenshot when the snapshot lists the element.
 - An interactive element with no role or accessible name in the snapshot is a testability gap and a candidate accessibility defect. Record it.
-- Never call `browser_run_code_unsafe`. The Playwright MCP README calls it RCE-equivalent.
-- Chrome DevTools MCP adds traces, network detail, and console output. Against private URLs, start it with `--no-performance-crux` and `--no-usage-statistics`. Both options are on by default, and CrUX lookups send trace URLs to Google. Also pass `--redact-network-headers` so that network tools redact sensitive headers.
+- Video needs Playwright's ffmpeg build, which `playwright-cli install-browser ffmpeg` installs. After a failed `video-start`, `video-stop` still prints a file path, so check the file before you cite it.
+
+Cursor's built-in browser may explore a page. It must not drive a repro run or a check, and a verdict must not cite its captures. On Cursor 3.25.9, its coordinate click ran the click handler of a disabled button and of a disabled input, and every event it sent had `isTrusted` set to false. Its ref click rejected `<input type="button">` controls, and its snapshot omitted a value that a text field held.
 
 ## Environment translation
 
@@ -175,7 +179,7 @@ Before relying on the adapter, run one harmless adapter check:
 5. Exercise one disposable state through mapped adapter actions.
 6. Inspect the resulting state.
 7. Capture a screenshot.
-8. Record a short clip.
+8. Record a short clip, then confirm the file exists and is not empty.
 9. Clean up.
 
 Enable repro work only when all nine steps succeed. The check itself posts nothing and changes no product data.

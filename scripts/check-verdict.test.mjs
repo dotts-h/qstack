@@ -23,13 +23,13 @@ function cited(markdown) {
 		.filter((token) => !token.includes("://"));
 }
 
-function check(markdown, artifacts = cited(markdown)) {
+function check(markdown, artifacts = cited(markdown), content = "x") {
 	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "qstack-verdict-"));
 	try {
 		for (const artifact of artifacts) {
 			const target = path.join(dir, artifact);
 			fs.mkdirSync(path.dirname(target), { recursive: true });
-			fs.writeFileSync(target, "");
+			fs.writeFileSync(target, content);
 		}
 		const file = path.join(dir, "verdict.md");
 		fs.writeFileSync(file, markdown);
@@ -40,7 +40,7 @@ function check(markdown, artifacts = cited(markdown)) {
 	}
 }
 
-function verdict(token, runLines, evidence = "- `captures/run-1.png`") {
+function verdict(token, runLines, evidence = "- `captures/run-1.png`\n- `captures/run-1.webm`") {
 	return [
 		"# Saved filter disappears after reload",
 		"",
@@ -81,12 +81,33 @@ test("a cited evidence path must exist", () => {
 });
 
 test("evidence needs a backticked path or URL", () => {
+	assert.equal(check(verdict("Blocked", [], "- `https://ci.example/run/7`")).status, 0);
+	assert.match(check(verdict("Blocked", [], "- the screenshot")).problems, /cites no backticked path or URL/);
+});
+
+test("a reproduction or a fix verdict needs a recording", () => {
 	const runs = [ORDER, "Runs: 2 of 2"];
-	assert.equal(check(verdict("Reproduced", runs, "- `https://ci.example/run/7`")).status, 0);
 	assert.match(
-		check(verdict("Reproduced", runs, "- the screenshot")).problems,
-		/cites no backticked path or URL/,
+		check(verdict("Reproduced", runs, "- `captures/run-1.png`")).problems,
+		/Reproduced needs a recording in Evidence/,
 	);
+	for (const recording of ["captures/run-1.webm", "captures/run-1.trace", "captures/run-1-trace.zip"]) {
+		assert.equal(check(verdict("Reproduced", runs, `- \`${recording}\``)).status, 0, recording);
+	}
+	assert.equal(check(verdict("Reproduced", runs, "- `https://ci.example/run/7/video.mp4?raw=1`")).status, 0);
+	assert.equal(check(verdict("Could not reproduce", [ORDER, "Runs: 1 of 2"], "- `captures/run-1.png`")).status, 0);
+	const fix = [ORDER, "Baseline runs: 2 of 2", "Patched runs: 0 of 2", "Pass-to-fail: none"];
+	assert.match(
+		check(verdict("Confirmed", fix, "- `captures/patched-run-2.png`")).problems,
+		/Confirmed needs a recording in Evidence/,
+	);
+});
+
+test("an empty evidence file is not evidence", () => {
+	const { status, problems } = check(verdict("Reproduced", [ORDER, "Runs: 2 of 2"]), undefined, "");
+	assert.equal(status, 1);
+	assert.match(problems, /evidence file is empty: captures\/run-1\.webm/);
+	assert.match(problems, /Reproduced needs a recording in Evidence/);
 });
 
 test("Reproduced needs the broken state on at least two runs", () => {
@@ -131,10 +152,9 @@ test("the verdict carries a label and the H1 comes first", () => {
 });
 
 test("evidence accepts existing files with long extensions and line suffixes", () => {
-	const runs = [ORDER, "Runs: 2 of 2"];
 	const cites = "- `trace.heapsnapshot`\n- `shot.png:12`";
-	assert.equal(check(verdict("Reproduced", runs, cites), ["trace.heapsnapshot", "shot.png"]).status, 0);
-	assert.match(check(verdict("Reproduced", runs, "- `shot.png:12`"), []).problems, /evidence path not found: shot\.png:12/);
+	assert.equal(check(verdict("Blocked", [], cites), ["trace.heapsnapshot", "shot.png"]).status, 0);
+	assert.match(check(verdict("Blocked", [], "- `shot.png:12`"), []).problems, /evidence path not found: shot\.png:12/);
 });
 
 test("Pass-to-fail takes none or check names, not a placeholder", () => {

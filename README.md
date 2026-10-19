@@ -74,16 +74,37 @@ These files are the host tools.
 
 - `agents/qstack-agent.md` is the delegate for reproduction, verification, and forensic tasks.
 - `scripts/log.mjs` appends one phase decision to a log file.
-- `scripts/check-verdict.mjs` checks a written verdict file against `skills/qstack-mode/references/verdict-file.md`. Run `node --test` from the plugin root to test it.
+- `scripts/check-verdict.mjs` checks a written verdict file against `skills/qstack-mode/references/verdict-file.md`.
+- `scripts/check-settings.mjs` checks a project settings file against `skills/qstack-mode/references/settings.md`.
+
+Run `node --test` from the plugin root to test both checkers.
 
 ## Load it locally
 
-Copy or link this folder to the local plugin path.
+Put a real copy of this folder at the local plugin path. Cursor skips a symlink there when it points elsewhere on disk.
 
 On Windows, use `%USERPROFILE%\.cursor\plugins\local\qstack`.
 On macOS or Linux, use `~/.cursor/plugins/local/qstack`.
 
-Cursor loads the plugin from that path with no install step.
+A git worktree is a real folder that still tracks this repository. From the repository root on Windows, run this:
+
+```powershell
+git worktree add --detach "$env:USERPROFILE\.cursor\plugins\local\qstack" <branch>
+```
+
+Then run Developer: Reload Window, or restart Cursor, and check that the qstack skills appear under Customize. On Teams and Enterprise plans, the Allow Local Plugin Imports admin setting controls this folder, and it is off by default on Enterprise.
+
+## Drive a web app
+
+qstack drives web apps through the Playwright CLI. Install it, its agent skill, and the video encoder once:
+
+```shell
+npm install -g @playwright/cli@latest
+playwright-cli install --skills -g
+playwright-cli install-browser ffmpeg
+```
+
+Then write the project settings file that `skills/qstack-mode/references/settings.md` describes, or run `/setup-qstack` to write it.
 
 ## Layout
 

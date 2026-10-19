@@ -66,3 +66,7 @@ Tell the user the rule was written and that it applies to new sessions. Re-runni
 ### 7. Offer a verification skill
 
 Check whether the project can drive the real app for proof. A `verify-*` skill or an existing harness counts. When neither exists, offer this once. "want a project-local verification skill, so agents can drive the app the way a user does and prove changes work? I can generate one with /create-verification-skill." On yes, invoke `/create-verification-skill`. It resolves wherever qstack is installed, in the workspace, the user directory, or a plugin. On no, move on.
+
+### 8. Offer project settings
+
+Reproduction needs `.cursor/qstack/settings.json` in the workspace, as [`../qstack-mode/references/settings.md`](../qstack-mode/references/settings.md) describes. When the file is missing, offer once to write it. On yes, ask which skill drives the app, and suggest `playwright-cli` for a web app that already runs at a URL. Copy [`../reproduce-issue/references/feature-map.example.md`](../reproduce-issue/references/feature-map.example.md) to `.cursor/qstack/feature-map.md` unless that file exists, write the settings file, and run `node scripts/check-settings.mjs <settings file> reproduce` from the plugin root. Tell the user to fill in the feature map before the first reproduction. On no, move on.

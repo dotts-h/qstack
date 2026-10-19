@@ -44,6 +44,8 @@ const URL_TOKEN = /^[a-z][a-z0-9+.-]*:\/\//i;
 const PATH_TOKEN = /[\\/]|\.[A-Za-z][A-Za-z0-9]*$/;
 const LINE_SUFFIX = /:\d+(?::\d+)?$/;
 const LABEL = /\b(measured|inferred|guess)\b/i;
+const RECORDING = /\.(webm|mp4|mov|mkv|trace)$|trace[^\\/]*\.zip$/i;
+const NEEDS_RECORDING = ["Reproduced", "Confirmed", "Insufficient fix"];
 const LUCKY_PASS_RISK = 0.05;
 
 function patchedRunsNeeded({ failed, total }) {
@@ -224,23 +226,35 @@ function checkRunRecord(section, verdict) {
 	for (const message of rule.check(record).filter(Boolean)) fail(section.n, message);
 }
 
-function checkEvidence(section) {
+function checkEvidence(section, verdict) {
 	const base = path.dirname(path.resolve(file));
 	let cited = 0;
+	let recorded = false;
 	for (const line of proseLines(section)) {
 		for (const match of line.text.matchAll(/`([^`]+)`/g)) {
 			const token = match[1].trim();
 			if (URL_TOKEN.test(token)) {
 				cited++;
+				recorded ||= RECORDING.test(token.replace(/[?#].*$/, ""));
 				continue;
 			}
 			if (/\s/.test(token)) continue;
 			const candidate = token.replace(LINE_SUFFIX, "");
-			if (fs.existsSync(path.resolve(base, candidate))) cited++;
-			else if (PATH_TOKEN.test(candidate)) fail(line.n, `evidence path not found: ${token}`);
+			const target = path.resolve(base, candidate);
+			if (!fs.existsSync(target)) {
+				if (PATH_TOKEN.test(candidate)) fail(line.n, `evidence path not found: ${token}`);
+				continue;
+			}
+			cited++;
+			const stat = fs.statSync(target);
+			if (stat.isFile() && stat.size === 0) fail(line.n, `evidence file is empty: ${token}`);
+			else recorded ||= RECORDING.test(candidate);
 		}
 	}
 	if (!cited) fail(section.n, "Evidence cites no backticked path or URL");
+	if (NEEDS_RECORDING.includes(verdict) && !recorded) {
+		fail(section.n, `${verdict} needs a recording in Evidence, a video or a trace`);
+	}
 }
 
 const h1 = lines.find((line) => !line.code && line.text.startsWith("# "));
@@ -273,7 +287,7 @@ for (const title of REQUIRED_SECTIONS) {
 	} else if (title === "Surface and runs") {
 		checkRunRecord(section, verdict);
 	} else if (title === "Evidence") {
-		checkEvidence(section);
+		checkEvidence(section, verdict);
 	}
 }
 

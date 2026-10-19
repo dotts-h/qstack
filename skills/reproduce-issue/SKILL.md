@@ -64,11 +64,13 @@ Re-read the thread before driving. If an open pull request or merged commit plau
 
 ## 2. Load the control adapter
 
+Find the settings file that [`../qstack-mode/references/settings.md`](../qstack-mode/references/settings.md) describes. Run `node scripts/check-settings.mjs <settings file> reproduce` from the plugin root. When the file is missing or the checker prints a problem, the outcome is `Blocked`, and `Missing:` names the settings file and each problem.
+
 Read [`references/control-adapter.md`](references/control-adapter.md) and the completed map at `control.feature_map_path`, then invoke the skill named by `control.skill_name`.
 
 Read the feature-map section that matches the reported user path before driving. If no section covers the feature, mark the run blocked. Do not invent a path or a selector.
 
-Require every capability in the control-adapter contract, including bring-up, real UI or CLI driving, read-only inspection, screenshots, recording, reset, and cleanup. If any required capability is missing, the outcome is `Blocked`.
+Require every capability in the control-adapter contract, including bring-up, real UI or CLI driving, read-only inspection, screenshots, recording, reset, and cleanup. Screenshots alone do not satisfy recording. If any required capability is missing, the outcome is `Blocked`.
 
 ## 3. Study the report
 
@@ -107,7 +109,7 @@ For a confirmed reproduction:
 - Record the full path through the symptom.
 - Capture a screenshot of the broken final state. On a CLI, the screenshot is the terminal showing the command and the broken output.
 - Save a short note with the exact steps and the observed state.
-- Keep artifacts in the configured temporary directory.
+- Keep artifacts in `control.artifact_directory`.
 
 A read-only reviewer answers one question. Does the evidence show the discriminating broken state? If the answer is no or uncertain, the reproduction is not confirmed.
 
@@ -129,7 +131,7 @@ Automated runs update the operations status first. For `Could not reproduce`, `B
 
 Watch a configured follow-up window only when this run is automated. Answer a direct question from evidence already gathered. Apply one concrete correction and rerun the reproduction once when it invalidates the setup. Stop when asked.
 
-Always call the adapter's cleanup. Keep artifacts only as long as the configured retention policy allows. Cleanup must not delete user work.
+Always call the adapter's cleanup. Keep artifacts only as long as `control.artifact_retention_hours` allows. Cleanup must not delete user work.
 
 ## Stop before a product fix
 
