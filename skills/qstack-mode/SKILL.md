@@ -1,6 +1,6 @@
 ---
 name: qstack-mode
-description: "Run structured QA workflows in Cursor: test chartering, two-run real-surface reproduction, defect triage, baseline-versus-patch fix verification, regression and visual parity checks, release gating, and verification skill authoring. Use for /qstack-mode."
+description: "Run structured QA workflows in Cursor: test chartering, real-surface reproduction with recorded runs, defect triage, baseline-versus-patch fix verification, regression and visual parity checks, release gating, and verification skill authoring. Use for /qstack-mode."
 ---
 
 # Qstack mode
@@ -21,7 +21,7 @@ Before designing test cases or exploring, restate the testing mission via `../in
 
 What a diff could break outside the changed lines routes to `../blast-radius/SKILL.md`.
 
-Reproducing a bug requires driving the real UI, CLI, or service surface twice (`../reproduce-issue/SKILL.md`). State inspection confirms an observation and never injects the symptom.
+Reproducing a bug requires driving the real UI, CLI, or service surface on at least two independent runs, recorded as K of N (`../reproduce-issue/SKILL.md`). State inspection confirms an observation and never injects the symptom.
 
 Classifying a report or filing a defect uses `../triage-defect/SKILL.md`.
 
@@ -31,7 +31,7 @@ Locking down a bug with an executable test uses `../regression-pin/SKILL.md`.
 
 Every prose surface and defect report passes through `../unslop/SKILL.md`.
 
-Multi-step QA runs log each phase decision with `node scripts/log.mjs <logfile> <phase> <decision> <why> <evidence> <result>` and validate written verdict files with `node scripts/check-verdict.mjs <verdict.md>`. Run both commands from the plugin root.
+Multi-step QA runs log each phase decision with `node scripts/log.mjs <logfile> <phase> <decision> <why> <evidence> <result>`. Write verdict files in the format at `references/verdict-file.md` and validate them with `node scripts/check-verdict.mjs <verdict.md>`. Run both commands from the plugin root.
 
 ## Principles
 
@@ -50,12 +50,12 @@ Read the leaf skill before you apply it.
 **Execution and Meta.**
 
 - **Build the lever.** `../principle-build-the-lever/SKILL.md`. Prefer a script or a playbook a reviewer can rerun.
-- **Never block on the human.** `../principle-never-block-on-the-human/SKILL.md`. Proceed on reversible checks.
+- **Never block on the human.** `../principle-never-block-on-the-human/SKILL.md`. Proceed on reversible checks, except the QA calls it names.
 - **Encode lessons in structure.** `../principle-encode-lessons-in-structure/SKILL.md`. Put a recurring check in a script instead of a second copy of the rule.
 
 ## Autonomy
 
-Reversible checks, local test builds, read-only queries, and screenshots proceed without asking (`principle-never-block-on-the-human`). Always pause before destructive data operations, production writes, or external ticket creation when target configuration is ambiguous. Never merge pull requests.
+Reversible checks, local test builds, read-only queries, and screenshots proceed without asking (`principle-never-block-on-the-human`). A call that changes what counts as correct waits for a person, such as accepting a healed locator or updating a baseline. Always pause before destructive data operations, production writes, or external ticket creation when target configuration is ambiguous. Never merge pull requests.
 
 ## Subagents
 
@@ -82,7 +82,7 @@ Open a todolist whose first items are the matched playbook's steps copied verbat
 
 - **Diagnose live.** `playbooks/diagnose-live.md`. A live CPU, heap, or CDP symptom.
 - **Diagnose trace.** `playbooks/diagnose-trace.md`. A captured cpuprofile, trace, or heapsnapshot.
-- **Visual parity.** `playbooks/visual-parity.md`. Pixel comparison against a baseline.
+- **Visual parity.** `playbooks/visual-parity.md`. Screenshot comparison against a baseline, with a person judging each change.
 - **Characterization pin.** `playbooks/characterization-pin.md`. A snapshot of current behavior before structure moves.
 - **Regression lane.** `playbooks/regression-lane.md`. One load-bearing scenario on trunk and head.
 - **Flake triage.** `playbooks/flake-triage.md`. A red CI check to classify before any retrigger.

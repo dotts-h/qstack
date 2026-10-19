@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from "node:fs";
+import path from "node:path";
 import process from "node:process";
 
 const ALLOWED_VERDICTS = [
@@ -22,10 +23,85 @@ const REQUIRED_SECTIONS = [
 	"Surface and runs",
 	"Evidence",
 ];
-const SKIP_TWO_RUNS = new Set(["Blocked", "Inconclusive", "Unproven"]);
+const RUN_FIELDS = {
+	surface: "Surface",
+	environment: "Environment",
+	order: "Order",
+	runs: "Runs",
+	baseline: "Baseline runs",
+	patched: "Patched runs",
+	passToFail: "Pass-to-fail",
+};
+const FIELD_BY_LABEL = Object.fromEntries(
+	Object.entries(RUN_FIELDS).map(([key, label]) => [label.toLowerCase(), key]),
+);
+const COUNT_FIELDS = ["runs", "baseline", "patched"];
 const SURFACE = /\b(UI|CLI|API|browser|desktop|mobile|harness|trace)\b/i;
-const TWO_RUNS = /\b(2x|twice|two runs|2 runs|runs:\s*2)\b/i;
-const BACKTICKED = /`[^`]+`/;
+const COUNT = /^(\d+)\s+of\s+(\d+)(?!\.?\d)/i;
+const NONE = /^none\.?$/i;
+const PLACEHOLDER = /^(n\/?a|no|nothing|nil|null|-+)\.?$/i;
+const URL_TOKEN = /^[a-z][a-z0-9+.-]*:\/\//i;
+const PATH_TOKEN = /[\\/]|\.[A-Za-z][A-Za-z0-9]*$/;
+const LINE_SUFFIX = /:\d+(?::\d+)?$/;
+const LABEL = /\b(measured|inferred|guess)\b/i;
+const LUCKY_PASS_RISK = 0.05;
+
+function patchedRunsNeeded({ failed, total }) {
+	if (failed >= total) return 2;
+	return Math.max(2, Math.ceil(Math.log(LUCKY_PASS_RISK) / Math.log(1 - failed / total)));
+}
+
+const SINGLE = ["order", "runs"];
+const PAIRED = ["order", "baseline", "patched", "passToFail"];
+const passing = {
+	needs: SINGLE,
+	check: ({ runs }) => [runs.failed > 0 && "a passing verdict allows no failing run"],
+};
+const failing = {
+	needs: SINGLE,
+	check: ({ runs }) => [runs.failed === 0 && "a failing verdict needs at least 1 failing run"],
+};
+const RUN_RULES = {
+	Reproduced: {
+		needs: SINGLE,
+		check: ({ runs }) => [
+			runs.failed < 2 && "Reproduced needs the broken state on at least 2 runs",
+		],
+	},
+	"Could not reproduce": {
+		needs: SINGLE,
+		check: ({ runs }) => [
+			runs.failed >= 2 && "the broken state appeared on 2 or more runs, so the verdict is Reproduced",
+		],
+	},
+	Confirmed: {
+		needs: PAIRED,
+		check: ({ baseline, patched, passToFail }) => {
+			const needed = patchedRunsNeeded(baseline);
+			return [
+				baseline.failed < 2 && "Confirmed needs the broken state on at least 2 baseline runs",
+				patched.failed > 0 && "Confirmed allows no failing patched run",
+				patched.total < needed &&
+					`a ${baseline.failed} of ${baseline.total} baseline needs at least ${needed} patched runs`,
+				!NONE.test(passToFail.value) && 'Confirmed needs "Pass-to-fail: none"',
+			];
+		},
+	},
+	"Insufficient fix": {
+		needs: PAIRED,
+		check: ({ baseline, patched, passToFail }) => [
+			baseline.failed < 2 && "Insufficient fix needs the broken state on at least 2 baseline runs",
+			patched.failed === 0 &&
+				NONE.test(passToFail.value) &&
+				"Insufficient fix needs a failing patched run or a Pass-to-fail check",
+		],
+	},
+	PASS: passing,
+	"PASS+NOTES": passing,
+	Pass: passing,
+	FAIL: failing,
+	Fail: failing,
+};
 
 const file = process.argv[2];
 if (!file) {
@@ -33,7 +109,7 @@ if (!file) {
 	process.exit(2);
 }
 
-const raw = fs.readFileSync(file, "utf8").split(/\r?\n/);
+const raw = fs.readFileSync(file, "utf8").replace(/^\uFEFF/, "").split(/\r?\n/);
 const problems = [];
 const fail = (line, message) => problems.push(`${file}:${line}: ${message}`);
 
@@ -81,6 +157,7 @@ for (const line of lines) {
 	else if (sections.length) sections.at(-1).body.push(line);
 }
 const bodyText = (section) => section.body.map((line) => line.text).join("\n");
+const proseLines = (section) => section.body.filter((line) => !line.code);
 
 function matchVerdict(text) {
 	let best = null;
@@ -96,7 +173,79 @@ function matchVerdict(text) {
 	return best ? best.token : null;
 }
 
-if (!lines.some((line) => !line.code && line.text.startsWith("# "))) fail(1, "no H1 title");
+function readRunRecord(section) {
+	const record = {};
+	const seen = new Set();
+	for (const line of proseLines(section)) {
+		const match = line.text.match(/^\s*(?:[-*]\s+)?([A-Za-z -]+?)\s*:\s*(.*)$/);
+		const key = match && FIELD_BY_LABEL[match[1].replace(/\s+/g, " ").toLowerCase()];
+		const value = match?.[2].trim();
+		if (!key || !value) continue;
+		if (seen.has(key)) {
+			fail(line.n, `${RUN_FIELDS[key]} appears more than once`);
+			continue;
+		}
+		seen.add(key);
+		if (key === "passToFail" && PLACEHOLDER.test(value)) {
+			fail(line.n, 'Pass-to-fail: write "none" or name the checks');
+		}
+		if (!COUNT_FIELDS.includes(key)) {
+			record[key] = { value, n: line.n };
+			continue;
+		}
+		const count = value.match(COUNT);
+		if (!count) {
+			fail(line.n, `${RUN_FIELDS[key]} must start with "K of N"`);
+			continue;
+		}
+		const failed = Number(count[1]);
+		const total = Number(count[2]);
+		if (failed > total) fail(line.n, `${RUN_FIELDS[key]} counts more failing runs than runs`);
+		else record[key] = { failed, total, n: line.n };
+	}
+	return record;
+}
+
+function checkRunRecord(section, verdict) {
+	const record = readRunRecord(section);
+	const rule = RUN_RULES[verdict];
+	const needs = ["surface", "environment", ...(rule?.needs ?? [])];
+	const missing = needs.filter((key) => !record[key]);
+	for (const key of missing) fail(section.n, `Surface and runs lacks "${RUN_FIELDS[key]}:"`);
+	if (record.surface && !SURFACE.test(record.surface.value)) {
+		fail(record.surface.n, "Surface names no UI, CLI, API, browser, desktop, mobile, harness, or trace");
+	}
+	if (!rule || missing.length) return;
+	for (const key of COUNT_FIELDS) {
+		if (rule.needs.includes(key) && record[key].total < 2) {
+			fail(record[key].n, `${RUN_FIELDS[key]} needs at least 2 runs`);
+		}
+	}
+	for (const message of rule.check(record).filter(Boolean)) fail(section.n, message);
+}
+
+function checkEvidence(section) {
+	const base = path.dirname(path.resolve(file));
+	let cited = 0;
+	for (const line of proseLines(section)) {
+		for (const match of line.text.matchAll(/`([^`]+)`/g)) {
+			const token = match[1].trim();
+			if (URL_TOKEN.test(token)) {
+				cited++;
+				continue;
+			}
+			if (/\s/.test(token)) continue;
+			const candidate = token.replace(LINE_SUFFIX, "");
+			if (fs.existsSync(path.resolve(base, candidate))) cited++;
+			else if (PATH_TOKEN.test(candidate)) fail(line.n, `evidence path not found: ${token}`);
+		}
+	}
+	if (!cited) fail(section.n, "Evidence cites no backticked path or URL");
+}
+
+const h1 = lines.find((line) => !line.code && line.text.startsWith("# "));
+if (!h1) fail(1, "no H1 title");
+else if (sections.length && h1.n > sections[0].n) fail(h1.n, "H1 title comes after the first section");
 
 let verdict = null;
 let previous = 0;
@@ -112,6 +261,7 @@ for (const title of REQUIRED_SECTIONS) {
 	if (title === "Verdict") {
 		verdict = matchVerdict(text);
 		if (!verdict) fail(section.n, "Verdict lacks an allowed token");
+		if (!LABEL.test(text)) fail(section.n, "Verdict lacks a measured, inferred, or guess label");
 	} else if (title === "Expected and broken state") {
 		if (!text.trim()) fail(section.n, "Expected and broken state is empty");
 		else {
@@ -121,12 +271,9 @@ for (const title of REQUIRED_SECTIONS) {
 			}
 		}
 	} else if (title === "Surface and runs") {
-		if (!SURFACE.test(text)) fail(section.n, "Surface and runs names no surface");
-		if (!SKIP_TWO_RUNS.has(verdict) && !TWO_RUNS.test(text)) {
-			fail(section.n, "Surface and runs confirms fewer than two runs");
-		}
+		checkRunRecord(section, verdict);
 	} else if (title === "Evidence") {
-		if (!BACKTICKED.test(text)) fail(section.n, "Evidence lacks a backticked path");
+		checkEvidence(section);
 	}
 }
 

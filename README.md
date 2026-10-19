@@ -30,7 +30,7 @@ There are seven specialist playbooks.
 
 - [Diagnose live](skills/qstack-mode/playbooks/diagnose-live.md) diagnoses a live CPU, heap, or CDP symptom.
 - [Diagnose trace](skills/qstack-mode/playbooks/diagnose-trace.md) diagnoses a captured cpuprofile, trace, or heapsnapshot.
-- [Visual parity](skills/qstack-mode/playbooks/visual-parity.md) compares pixels against a baseline.
+- [Visual parity](skills/qstack-mode/playbooks/visual-parity.md) compares screenshots against a baseline and routes each change to a person.
 - [Characterization pin](skills/qstack-mode/playbooks/characterization-pin.md) records current behavior before structure moves.
 - [Regression lane](skills/qstack-mode/playbooks/regression-lane.md) runs one load-bearing scenario on trunk and on head.
 - [Flake triage](skills/qstack-mode/playbooks/flake-triage.md) classifies a red CI check before any retrigger.
@@ -74,7 +74,7 @@ These files are the host tools.
 
 - `agents/qstack-agent.md` is the delegate for reproduction, verification, and forensic tasks.
 - `scripts/log.mjs` appends one phase decision to a log file.
-- `scripts/check-verdict.mjs` checks a written verdict file.
+- `scripts/check-verdict.mjs` checks a written verdict file against `skills/qstack-mode/references/verdict-file.md`. Run `node --test` from the plugin root to test it.
 
 ## Load it locally
 
