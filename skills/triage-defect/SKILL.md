@@ -161,6 +161,8 @@ Destination, or `owner unclear`. Include at most one allowed owner ping.
 
 Inline a screenshot or a representative video frame when the report can hold it. Link remaining artifacts.
 
+When the run also writes a verdict file, put the report in it as `## Triage`, in the shape that [the verdict file reference](../qstack-mode/references/verdict-file.md#sections) gives.
+
 ## 7. Automated thread handoff
 
 Use this section only when the run has immutable source coordinates. Interactive triage returns the defect report and posts nothing.

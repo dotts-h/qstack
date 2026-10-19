@@ -16,6 +16,13 @@ const examples = [...reference.matchAll(/^```markdown\r?\n([\s\S]*?)^```\r?$/gm)
 	(match) => match[1],
 );
 const ORDER = "Order: fresh browser profile per run";
+const FIX_URL = "https://github.com/acme/app/pull/123";
+const VERDICT_LINES = {
+	Blocked: ["Fix artifact: none", "Missing: a feature-map section for saved filters"],
+	Confirmed: [`Fix artifact: ${FIX_URL}`, "Missing: none"],
+	"Insufficient fix": [`Fix artifact: ${FIX_URL}`, "Missing: none"],
+};
+const verdictLines = (token) => VERDICT_LINES[token] ?? ["Fix artifact: none", "Missing: none"];
 
 function cited(markdown) {
 	return [...markdown.matchAll(/`([^`\s]+\/[^`\s]+)`/g)]
@@ -40,13 +47,19 @@ function check(markdown, artifacts = cited(markdown), content = "x") {
 	}
 }
 
-function verdict(token, runLines, evidence = "- `captures/run-1.png`\n- `captures/run-1.webm`") {
+function verdict(
+	token,
+	runLines,
+	evidence = "- `captures/run-1.png`\n- `captures/run-1.webm`",
+	verdictFields = verdictLines(token),
+) {
 	return [
 		"# Saved filter disappears after reload",
 		"",
 		"## Verdict",
 		"",
 		`${token}. Measured.`,
+		...verdictFields,
 		"",
 		"## Expected and broken state",
 		"",
@@ -195,6 +208,33 @@ test("Blocked needs a surface and an environment but no runs", () => {
 	assert.equal(check(verdict("Blocked", [])).status, 0);
 	const noEnvironment = verdict("Blocked", []).replace(/^Environment:.*\n/m, "");
 	assert.match(check(noEnvironment).problems, /lacks "Environment:"/);
+});
+
+test("a reproduce-issue verdict needs Fix artifact and Missing lines, a gate verdict does not", () => {
+	const runs = [ORDER, "Runs: 2 of 2"];
+	assert.match(check(verdict("Reproduced", runs, undefined, ["Missing: none"])).problems, /Verdict lacks "Fix artifact:"/);
+	assert.match(check(verdict("Inconclusive", [], undefined, ["Fix artifact: none"])).problems, /Verdict lacks "Missing:"/);
+	assert.equal(check(verdict("PASS", [ORDER, "Runs: 0 of 2"], undefined, [])).status, 0);
+	assert.equal(check(verdict("Unproven", [], undefined, [])).status, 0);
+});
+
+test("Fix artifact holds a URL or none, and a fix verdict holds the URL", () => {
+	const named = ["Fix artifact: PR 123", "Missing: none"];
+	assert.match(check(verdict("Reproduced", [ORDER, "Runs: 2 of 2"], undefined, named)).problems, /Fix artifact: write a URL or "none"/);
+	const unlinked = ["Fix artifact: none", "Missing: none"];
+	const confirmed = [ORDER, "Baseline runs: 2 of 2", "Patched runs: 0 of 2", "Pass-to-fail: none"];
+	assert.match(check(verdict("Confirmed", confirmed, undefined, unlinked)).problems, /a fix verdict needs a URL in "Fix artifact:"/);
+	const insufficient = [ORDER, "Baseline runs: 2 of 2", "Patched runs: 1 of 3", "Pass-to-fail: none"];
+	assert.match(check(verdict("Insufficient fix", insufficient, undefined, unlinked)).problems, /a fix verdict needs a URL/);
+});
+
+test("Blocked names what was missing, once", () => {
+	for (const missing of ["none", "n/a"]) {
+		const lines = ["Fix artifact: none", `Missing: ${missing}`];
+		assert.match(check(verdict("Blocked", [], undefined, lines)).problems, /Blocked needs "Missing:" to name what was missing/);
+	}
+	const twice = [...verdictLines("Blocked"), "Missing: a seeded account"];
+	assert.match(check(verdict("Blocked", [], undefined, twice)).problems, /Missing appears more than once/);
 });
 
 test("prose rejects long dashes", () => {

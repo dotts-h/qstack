@@ -12,7 +12,7 @@ Bundled skill paths are relative to `skills/qstack-mode/SKILL.md`.
 6. Record each run, and capture a screenshot of its final state. Screenshots alone do not satisfy recording.
 7. Trace the path with `../how/SKILL.md`. Use `../why/SKILL.md` for regression history and defensive code. Separate measured facts from hypotheses.
 8. Classify the report and dedupe it with `../triage-defect/SKILL.md`. Do not invent a second marker format in this playbook.
-9. Write the verdict file in the format at `references/verdict-file.md`. Include the outcome token, the evidence paths, and a label of `measured`, `inferred`, or `guess` on every claim. Run `node scripts/check-verdict.mjs <verdict.md>` from the plugin root. Fix every line it prints.
+9. Write the verdict file in the format at `references/verdict-file.md`. Include the outcome token, the evidence paths, and a label of `measured`, `inferred`, or `guess` on every claim. Run `node scripts/check-verdict.mjs <verdict.md>` from the plugin root until it prints `problems=0`.
 10. Emit `Reproduced` only when the same broken state appeared on at least two independent runs. Emit `Could not reproduce` when it appeared on fewer than two. Emit `Blocked` when the adapter or the environment cannot perform the path.
 
 **Reply.** The expected state, the broken state, the runs as K of N, the classification, the dedupe result, the outcome token, and the evidence paths.

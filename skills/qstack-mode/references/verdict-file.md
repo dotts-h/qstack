@@ -1,6 +1,6 @@
 # Verdict file
 
-A verdict file records one QA outcome with the runs and artifacts behind it. `scripts/check-verdict.mjs` enforces this format. Run `node scripts/check-verdict.mjs <verdict.md>` from the plugin root and fix every line it prints.
+A verdict file records one QA outcome with the runs and artifacts behind it. `scripts/check-verdict.mjs` enforces this format. Run `node scripts/check-verdict.mjs <verdict.md>` from the plugin root. It prints one summary line, then one line for each problem. Fix the problems and run it again until the summary line ends in `problems=0`.
 
 ## Sections
 
@@ -11,7 +11,14 @@ Start with an H1 title. Then write these sections in this order:
 3. `## Surface and runs` holds the run record.
 4. `## Evidence` cites the artifacts.
 
+When the run also wrote a defect report with [the triage-defect skill](../../triage-defect/SKILL.md), add it as `## Triage` after `## Evidence`. Leave out the parts that the sections above already hold, such as the expected and observed states and the environment. Start each remaining part with its label, such as `Route: owner unclear`.
+
 The outcome tokens are `Reproduced`, `Could not reproduce`, `Blocked`, `Confirmed`, `Insufficient fix`, `Inconclusive`, `PASS`, `PASS+NOTES`, `FAIL`, `Pass`, `Fail`, and `Unproven`.
+
+The first six are the outcomes of [the reproduce-issue skill](../../reproduce-issue/SKILL.md). Each of them adds two lines under `## Verdict`:
+
+- `Fix artifact:` holds the URL of the pull request or commit under test, or says `none`. `Confirmed` and `Insufficient fix` need the URL.
+- `Missing:` names the capability or fact that the run lacked, or says `none`. `Blocked` must name it.
 
 Outside code, use straight quotes and no long dashes.
 
@@ -22,7 +29,7 @@ Write each field once, on its own line, in `## Surface and runs`.
 - `Surface:` names the UI, CLI, API, browser, desktop, mobile, harness, or trace surface.
 - `Environment:` names the build or revision, the platform, the data set, and the seed.
 - `Order:` names the run order and the reset between runs, such as a fresh process or profile.
-- `Runs: K of N` counts N runs that reached the divergence. K of them showed the broken state.
+- `Runs: K of N` counts N runs that reached the divergence. K of them showed the broken state. A run showed it when one of its own artifacts shows it, such as its video, its screenshot, or its run log. The video alone is enough when the state was gone before the screenshot.
 - `Baseline runs: K of N` and `Patched runs: K of N` replace `Runs:` when you verify a fix.
 - `Pass-to-fail:` names the checks that passed on the baseline and fail on the patched revision, or says `none`.
 
@@ -63,6 +70,8 @@ Backticks in `## Evidence` mark artifacts. Cite each artifact as a URL, an absol
 ## Verdict
 
 Reproduced. Measured.
+Fix artifact: none
+Missing: none
 
 ## Expected and broken state
 
@@ -81,6 +90,14 @@ Runs: 2 of 3 showed the broken state
 - `captures/run-1.png`
 - `captures/run-3.png`
 - `captures/run-1-trace.zip`
+
+## Triage
+
+Classification: Bug
+Duplicate: No match
+Cause trace: hypothesis, the filter list renders before the saved filters load
+Related: none
+Route: owner unclear
 ```
 
 ### Fix verification

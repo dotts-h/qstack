@@ -111,6 +111,8 @@ For a confirmed reproduction:
 - Save a short note with the exact steps and the observed state.
 - Keep artifacts in `control.artifact_directory`.
 
+A run whose screenshot missed the broken state can still count. The [run record](../qstack-mode/references/verdict-file.md#run-record) names the artifacts that may show it.
+
 A read-only reviewer answers one question. Does the evidence show the discriminating broken state? If the answer is no or uncertain, the reproduction is not confirmed.
 
 ## 6. Verify an existing fix
@@ -121,7 +123,7 @@ The baseline must show the symptom on at least two runs. The patched build must 
 
 ## 7. Emit the verdict
 
-Write the verdict file in the format at [`../qstack-mode/references/verdict-file.md`](../qstack-mode/references/verdict-file.md). The outcome token is `Reproduced`, `Could not reproduce`, `Blocked`, `Confirmed`, `Insufficient fix`, or `Inconclusive`. Under `## Verdict`, add `Fix artifact: <url or none>` and `Missing: <capability or fact, or none>`. Run `node scripts/check-verdict.mjs <verdict.md>` from the plugin root and fix every line it prints.
+Write the verdict file in the format at [`../qstack-mode/references/verdict-file.md`](../qstack-mode/references/verdict-file.md), including the `Fix artifact:` and `Missing:` lines that it requires under `## Verdict`. The outcome token is `Reproduced`, `Could not reproduce`, `Blocked`, `Confirmed`, `Insufficient fix`, or `Inconclusive`. Run `node scripts/check-verdict.mjs <verdict.md>` from the plugin root until it prints `problems=0`.
 
 Interactive runs return that verdict and post nothing.
 
