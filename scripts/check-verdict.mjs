@@ -38,7 +38,7 @@ const RUN_FIELDS = {
 	timing: "Timing",
 };
 const COUNT_FIELDS = ["runs", "baseline", "patched"];
-const SURFACE = /\b(UI|CLI|API|browser|desktop|mobile|harness|trace)\b/i;
+const SURFACE = /\b(UI|CLI|API|service|browser|desktop|mobile|harness|trace)\b/i;
 const COUNT = /^(\d+)\s+of\s+(\d+)(?!\.?\d)/i;
 const NONE = /^none\.?$/i;
 const PLACEHOLDER = /^(n\/?a|no|nothing|nil|null|-+)\.?$/i;
@@ -273,7 +273,7 @@ function checkRunRecord(section, verdict, record) {
 	const missing = needs.filter((key) => record[key] === undefined);
 	for (const key of missing) fail(section.n, `Surface and runs lacks "${RUN_FIELDS[key]}:"`);
 	if (record.surface && !SURFACE.test(record.surface.value)) {
-		fail(record.surface.n, "Surface names no UI, CLI, API, browser, desktop, mobile, harness, or trace");
+		fail(record.surface.n, "Surface names no UI, CLI, API, service, browser, desktop, mobile, harness, or trace");
 	}
 	if (!rule || needs.some((key) => !record[key])) return;
 	for (const key of COUNT_FIELDS) {

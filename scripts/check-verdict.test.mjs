@@ -313,6 +313,15 @@ test("gate verdicts follow the failing run count", () => {
 	assert.equal(check(verdict("FAIL", [ORDER, "Runs: 1 of 2"])).status, 0);
 });
 
+test("each surface word in the reference is accepted, and a surface with none is not", () => {
+	const line = reference.split(/\r?\n/).find((text) => text.startsWith("- `Surface:` names the "));
+	const words = line.slice("- `Surface:` names the ".length).replace(/ surface\.$/, "").replace(/\bor /, "").split(", ");
+	assert.ok(words.includes("service"), words.join(", "));
+	const surface = (text) => verdict("Blocked", []).replace("Surface: browser UI through Playwright", `Surface: ${text}`);
+	for (const word of words) assert.equal(check(surface(`the orders ${word}`)).status, 0, word);
+	assert.match(check(surface("the orders endpoint over HTTP")).problems, /Surface names no UI, CLI, API, service/);
+});
+
 test("Blocked needs a surface and an environment but no runs", () => {
 	assert.equal(check(verdict("Blocked", [])).status, 0);
 	const noEnvironment = verdict("Blocked", []).replace(/^Environment:.*\n/m, "");
