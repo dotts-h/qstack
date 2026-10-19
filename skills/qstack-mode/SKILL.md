@@ -90,4 +90,4 @@ Open a todolist whose first items are the matched playbook's steps copied verbat
 - **Characterization pin.** `playbooks/characterization-pin.md`. A snapshot of current behavior before structure moves.
 - **Regression lane.** `playbooks/regression-lane.md`. One load-bearing scenario on trunk and head.
 - **Flake triage.** `playbooks/flake-triage.md`. A red CI check to classify before any retrigger.
-- **Perf gate.** `playbooks/perf-gate.md`. A baseline and post-change measurement.
+- **Perf gate.** `playbooks/perf-gate.md`. A baseline measured against a change, an account, or a configuration.

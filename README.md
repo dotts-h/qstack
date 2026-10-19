@@ -34,7 +34,7 @@ There are seven specialist playbooks.
 - [Characterization pin](skills/qstack-mode/playbooks/characterization-pin.md) records current behavior before structure moves.
 - [Regression lane](skills/qstack-mode/playbooks/regression-lane.md) runs one load-bearing scenario on trunk and on head.
 - [Flake triage](skills/qstack-mode/playbooks/flake-triage.md) classifies a red CI check before any retrigger.
-- [Perf gate](skills/qstack-mode/playbooks/perf-gate.md) compares a baseline with the measurement after the change.
+- [Perf gate](skills/qstack-mode/playbooks/perf-gate.md) compares a baseline with the measurement after a change, or on another account or configuration.
 
 ## Skills
 
