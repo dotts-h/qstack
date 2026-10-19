@@ -143,6 +143,7 @@ The adapter must:
 
 A web app adapter drives the page through the Playwright CLI, `playwright-cli`. Its agent skill, installed with `playwright-cli install --skills`, documents its commands. When the app already runs at a URL, `playwright-cli` itself can be `control.skill_name`. When the app must be built or started first, write a project adapter skill that starts it and drives it through the CLI.
 
+- Run every `playwright-cli` command from the artifact directory. The CLI writes its output to a `.playwright-cli` folder in the directory it runs from, so a run from the workspace root leaves captures in the repository.
 - Give each repro run its own named session, as in `playwright-cli -s=<run> open <url>`, and close it before the next run. A new session starts from an empty in-memory profile, which is the reset between runs.
 - Act on element refs from the latest snapshot. Refs expire with the snapshot, so take a new one after the page changes.
 - Never store a ref in a check or in the feature map. The CLI prints the Playwright code behind each action. Store the role, label, or test-id locator that code names.
