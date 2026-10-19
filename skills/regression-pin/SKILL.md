@@ -16,7 +16,7 @@ Do not force a test when it would be impractical. Skip a new test when it would 
 2. **Choose the narrowest executable check.** Prefer the closest unit, component, integration, or regression test already used for that code path. If no practical test path is obvious, do not create one from scratch just to satisfy the workflow.
 3. **Write the failing check first.** Add the smallest focused test that would have caught the bug. Encode the intended behavior. Do not mirror the current implementation, and do not assert on private helpers or the order of internal calls.
 4. **Run the new check before the fix.** Confirm it fails for the intended reason. If it passes, or if it fails for an unrelated reason, correct the check or the reproduction before editing the implementation. When a fix commit or pull request already exists, run this check on the baseline revision and do not author a second product fix.
-5. **Apply or select the fix.** When this run is landing the fix, make the smallest production change that satisfies the intended behavior and preserves nearby contracts. When a fix artifact already exists, use that revision and do not edit it.
+5. **Select the fix.** When a fix commit or pull request exists, use that revision and do not edit it. When none exists, stop here and give the failing check to the operator.
 6. **Rerun the same check.** Confirm it passes on the patched revision.
 
 ## When a failing test is impractical
@@ -39,5 +39,5 @@ Prefer no new test over a bad test. A bad test mostly exercises mocks, encodes i
 Report the evidence.
 
 - Name the failing-before test or executable check, and the failure it produced.
-- Name the passing-after run, and any nearby validation.
+- Name the passing-after run and any nearby validation, or say that no fix exists yet.
 - If failing-before evidence could not be demonstrated, say why, and describe the closest regression check used instead.
