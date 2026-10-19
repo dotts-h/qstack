@@ -24,7 +24,7 @@ const KIND = {
 };
 
 const [file, use] = process.argv.slice(2);
-if (!file || !READS[use]) {
+if (!file || !Object.hasOwn(READS, use)) {
 	console.error("Usage: node scripts/check-settings.mjs <settings.json> <reproduce|triage>");
 	process.exit(2);
 }
@@ -45,9 +45,15 @@ function read() {
 		fail("settings file not found");
 		return null;
 	}
+	const bytes = fs.readFileSync(file);
+	const utf16 = { fffe: "UTF-16LE", feff: "UTF-16BE" }[bytes.subarray(0, 2).toString("hex")];
+	if (utf16) {
+		fail(`the file is ${utf16}. Save it as UTF-8`);
+		return null;
+	}
 	let settings;
 	try {
-		settings = JSON.parse(fs.readFileSync(file, "utf8").replace(/^\uFEFF/, ""));
+		settings = JSON.parse(bytes.toString("utf8").replace(/^\uFEFF/, ""));
 	} catch (error) {
 		fail(`not valid JSON: ${error.message}`);
 		return null;
@@ -71,7 +77,10 @@ function checkValue(key, value, root) {
 	}
 	if (typeof value !== "string" || !value.trim()) return fail(`${key} must be a non-empty string`);
 	const resolved = path.resolve(root, value);
-	if (KIND[key] === "file" && !fs.existsSync(resolved)) fail(`${key} not found: ${resolved}`);
+	if (KIND[key] === "file") {
+		if (!fs.existsSync(resolved)) fail(`${key} not found: ${resolved}`);
+		else if (fs.statSync(resolved).isDirectory()) fail(`${key} is a folder, not a file: ${resolved}`);
+	}
 	if (KIND[key] === "outside") {
 		const inside = path.relative(root, resolved);
 		const outside = inside === ".." || inside.startsWith(`..${path.sep}`) || path.isAbsolute(inside);

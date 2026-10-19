@@ -20,13 +20,14 @@ function check(use, settings, files = [MAP]) {
 	try {
 		for (const name of files) {
 			const target = path.join(root, name);
-			fs.mkdirSync(path.dirname(target), { recursive: true });
-			fs.writeFileSync(target, "x");
+			fs.mkdirSync(name.endsWith("/") ? target : path.dirname(target), { recursive: true });
+			if (!name.endsWith("/")) fs.writeFileSync(target, "x");
 		}
 		const file = path.join(root, ".cursor", "qstack", "settings.json");
 		if (settings !== undefined) {
 			fs.mkdirSync(path.dirname(file), { recursive: true });
-			fs.writeFileSync(file, typeof settings === "string" ? settings : JSON.stringify(settings));
+			const raw = typeof settings === "string" || Buffer.isBuffer(settings);
+			fs.writeFileSync(file, raw ? settings : JSON.stringify(settings));
 		}
 		const result = spawnSync(process.execPath, [checker, file, use], { encoding: "utf8" });
 		return { status: result.status, problems: result.stderr };
@@ -48,10 +49,13 @@ test("the example in the settings reference passes both uses", () => {
 });
 
 test("a missing or unreadable settings file fails closed with one problem", () => {
+	const json = JSON.stringify(adapter());
 	for (const [settings, problem] of [
 		[undefined, /settings file not found/],
 		["{ control: ", /not valid JSON/],
 		["[]", /must be a JSON object/],
+		[Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(json, "utf16le")]), /the file is UTF-16LE\. Save it as UTF-8/],
+		[Buffer.concat([Buffer.from([0xfe, 0xff]), Buffer.from(json, "utf16le").swap16()]), /the file is UTF-16BE\. Save it as UTF-8/],
 	]) {
 		const { status, problems } = check("reproduce", settings);
 		assert.equal(status, 1);
@@ -69,6 +73,13 @@ test("reproduce needs the adapter skill and a feature map that exists", () => {
 	);
 	assert.match(check("reproduce", adapter({ skill_name: " " })).problems, /control\.skill_name must be a non-empty string/);
 	assert.match(check("reproduce", adapter(), []).problems, /control\.feature_map_path not found: .*feature-map\.md/);
+});
+
+test("a map path must name a file, not a folder", () => {
+	assert.match(check("reproduce", adapter(), [`${MAP}/`]).problems, /control\.feature_map_path is a folder, not a file/);
+	const routing = { routing: { map_path: ".cursor/qstack/routing" } };
+	assert.match(check("triage", routing, [".cursor/qstack/routing/"]).problems, /routing\.map_path is a folder, not a file/);
+	assert.equal(check("triage", routing, [".cursor/qstack/routing"]).status, 0);
 });
 
 test("relative paths resolve from the folder that holds .cursor", () => {
@@ -119,5 +130,9 @@ test("each use checks only the keys it reads", () => {
 
 test("the checker exits 2 without a file or a known use", () => {
 	assert.equal(spawnSync(process.execPath, [checker]).status, 2);
-	assert.equal(spawnSync(process.execPath, [checker, "settings.json", "deploy"]).status, 2);
+	for (const use of ["deploy", "constructor", "__proto__", "toString"]) {
+		const result = spawnSync(process.execPath, [checker, "settings.json", use], { encoding: "utf8" });
+		assert.equal(result.status, 2, use);
+		assert.match(result.stderr, /^Usage: /, use);
+	}
 });
