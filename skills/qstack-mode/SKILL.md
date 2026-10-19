@@ -63,6 +63,8 @@ Reversible checks, local test builds, read-only queries, and screenshots proceed
 
 Use `subagent_type: "qstack-agent"` (or `generalPurpose` with this file's path when `qstack-agent` is not yet registered in the host session) for background verification delegates. Respect `how` and `why` subagent rules and `~/.cursor/rules/qstack-models.mdc` role overrides configured via `../setup-qstack/SKILL.md`.
 
+When a delegate reports that it could not spawn the read-only reviewer that `../reproduce-issue/SKILL.md` asks for, run that reviewer before you accept its verdict.
+
 ## Writing the reply
 
 Short declarative sentences. No long dashes. No mid-sentence colons. Frame impact for the consumer (the user or QA reviewer) and the maintainer (the engineer receiving the verdict or defect report). Every claim carries its evidence or its label (`measured`, `inferred`, or `guess`) in the same sentence.

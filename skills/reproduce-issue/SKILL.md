@@ -117,6 +117,8 @@ A run whose screenshot missed the broken state can still count. The [run record]
 
 A read-only reviewer answers one question. Does the evidence show the discriminating broken state? If the answer is no or uncertain, the reproduction is not confirmed.
 
+The reviewer is a separate subagent. A delegate that cannot spawn one says so in its reply and lists the evidence paths. Its parent then runs the reviewer before it accepts the verdict.
+
 ## 6. Verify an existing fix
 
 When a fix pull request or commit exists, follow [`references/verify-existing-fix.md`](references/verify-existing-fix.md).
