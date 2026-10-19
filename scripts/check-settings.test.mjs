@@ -50,14 +50,15 @@ test("the example in the settings reference passes both uses", () => {
 
 test("a missing or unreadable settings file fails closed with one problem", () => {
 	const json = JSON.stringify(adapter());
-	for (const [settings, problem] of [
+	for (const [settings, problem, files] of [
 		[undefined, /settings file not found/],
+		[undefined, /the settings path is a folder, not a file/, [MAP, ".cursor/qstack/settings.json/"]],
 		["{ control: ", /not valid JSON/],
 		["[]", /must be a JSON object/],
 		[Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(json, "utf16le")]), /the file is UTF-16LE\. Save it as UTF-8/],
 		[Buffer.concat([Buffer.from([0xfe, 0xff]), Buffer.from(json, "utf16le").swap16()]), /the file is UTF-16BE\. Save it as UTF-8/],
 	]) {
-		const { status, problems } = check("reproduce", settings);
+		const { status, problems } = check("reproduce", settings, files);
 		assert.equal(status, 1);
 		assert.match(problems, problem);
 		assert.equal(problems.trim().split("\n").length, 1, problems);

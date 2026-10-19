@@ -45,6 +45,10 @@ function read() {
 		fail("settings file not found");
 		return null;
 	}
+	if (fs.statSync(file).isDirectory()) {
+		fail("the settings path is a folder, not a file");
+		return null;
+	}
 	const bytes = fs.readFileSync(file);
 	const utf16 = { fffe: "UTF-16LE", feff: "UTF-16BE" }[bytes.subarray(0, 2).toString("hex")];
 	if (utf16) {
