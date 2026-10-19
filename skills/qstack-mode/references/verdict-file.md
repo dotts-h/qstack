@@ -2,6 +2,8 @@
 
 A verdict file records one QA outcome with the runs and artifacts behind it. `scripts/check-verdict.mjs` enforces this format. Run `node scripts/check-verdict.mjs <verdict.md>` from the plugin root. It prints one summary line, then one line for each problem. Fix the problems and run it again until the summary line ends in `problems=0`.
 
+Write the file as UTF-8. Windows PowerShell 5.1 writes UTF-16 with `>` and `Out-File`, and the checker rejects UTF-16.
+
 ## Sections
 
 Start with an H1 title. Then write these sections in this order:
@@ -17,7 +19,7 @@ The outcome tokens are `Reproduced`, `Could not reproduce`, `Blocked`, `Confirme
 
 The first six are the outcomes of [the reproduce-issue skill](../../reproduce-issue/SKILL.md). Each of them adds two lines under `## Verdict`:
 
-- `Fix artifact:` holds the URL of the pull request or commit under test, or says `none`. `Confirmed` and `Insufficient fix` need the URL.
+- `Fix artifact:` holds the URL of the pull request or commit under test, or says `none`. Name a commit that has no URL by its SHA. Backticks around the URL or the SHA are fine, and so is a markdown link to the URL. `Confirmed` and `Insufficient fix` need the URL or the SHA.
 - `Missing:` names the capability or fact that the run lacked, or says `none`. `Blocked` must name it.
 
 Outside code, use straight quotes and no long dashes.
@@ -26,10 +28,10 @@ Outside code, use straight quotes and no long dashes.
 
 Write each field once, on its own line, in `## Surface and runs`.
 
-- `Surface:` names the UI, CLI, API, browser, desktop, mobile, harness, or trace surface.
+- `Surface:` names the UI, CLI, API, service, browser, desktop, mobile, harness, or trace surface.
 - `Environment:` names the build or revision, or the URL and the date when no revision can be read. It also names the platform, and the data set and the seed when the product takes them.
 - `Order:` names the run order and the reset between runs, such as a fresh process or profile.
-- `Runs: K of N` counts N runs that reached the divergence. K of them showed the broken state. A run showed it when one of its own artifacts shows it, such as its video, its screenshot, or its run log. The video alone is enough when the state was gone before the screenshot.
+- `Runs: K of N` counts N runs that reached the divergence. K of them showed the broken state. A run showed it when one of its own artifacts shows it, such as its recording, its screenshot, or its run log. The recording alone is enough when the state was gone before the screenshot.
 - `Baseline runs: K of N` and `Patched runs: K of N` replace `Runs:` when you verify a fix.
 - `Pass-to-fail:` names the checks that passed on the baseline and fail on the patched revision, or says `none`.
 - `Timing:` marks a timing verdict, whose broken state is a duration. It names the clock that timed each run, such as the page's performance timeline. Leave it out of every other verdict.
@@ -57,9 +59,9 @@ An intermittent bug needs more clean patched runs, because a fix with no effect 
 
 ## Evidence
 
-Backticks in `## Evidence` mark artifacts. Cite each artifact as a URL, an absolute path, or a path relative to the verdict file, with no spaces in the path. A path may end in a line suffix such as `:12`. Every backticked token that names a file must exist and must not be empty when the checker runs, so run the checker before cleanup. A token with a slash or a file extension counts as a file name, so keep code names such as method calls out of backticks in this section.
+Backticks in `## Evidence` mark artifacts. Cite each artifact as a URL, an absolute path, or a path relative to the verdict file. A path may end in a line suffix such as `:12`. Every backticked token that names a file must exist and must not be empty when the checker runs, so run the checker before cleanup. A token with a slash or a file extension counts as a file name, so keep code names such as method calls out of backticks in this section.
 
-`Reproduced`, `Confirmed`, and `Insufficient fix` also need a recording. A recording is a video ending in `.webm`, `.mp4`, `.mov`, or `.mkv`. A trace also counts, as a `.trace` file or a `.zip` file with `trace` in its name. Screenshots alone do not count.
+`Reproduced`, `Confirmed`, and `Insufficient fix` also need a recording. A recording is a video ending in `.webm`, `.mp4`, `.mov`, or `.mkv`. A trace also counts, as a `.zip` file with `trace` in its name, or as a local `.trace` file with a non-empty `screencast` folder beside it. A `playwright-cli` trace keeps its frames in that folder, so keep the folder with the `.trace` file. Screenshots alone do not count.
 
 A timing verdict may cite timing data instead of a recording. Timing data is a `.json`, `.jsonl`, `.csv`, `.sqlite`, `.db`, or `.cpuprofile` file exported from its runs. Without `Timing:`, a data file does not count.
 

@@ -38,15 +38,18 @@ const RUN_FIELDS = {
 	timing: "Timing",
 };
 const COUNT_FIELDS = ["runs", "baseline", "patched"];
-const SURFACE = /\b(UI|CLI|API|browser|desktop|mobile|harness|trace)\b/i;
+const SURFACE = /\b(UI|CLI|API|service|browser|desktop|mobile|harness|trace)\b/i;
 const COUNT = /^(\d+)\s+of\s+(\d+)(?!\.?\d)/i;
 const NONE = /^none\.?$/i;
 const PLACEHOLDER = /^(n\/?a|no|nothing|nil|null|-+)\.?$/i;
 const URL_TOKEN = /^[a-z][a-z0-9+.-]*:\/\//i;
+const COMMIT_SHA = /^[0-9a-f]{7,40}(?![0-9a-z])/i;
+const WRAPPED = /^`([^`]+)`|^\[[^\]]*\]\(([^)\s]+)\)/;
 const PATH_TOKEN = /[\\/]|\.[A-Za-z][A-Za-z0-9]*$/;
 const LINE_SUFFIX = /:\d+(?::\d+)?$/;
 const LABEL = /\b(measured|inferred|guess)\b/i;
-const RECORDING = /\.(webm|mp4|mov|mkv|trace)$|trace[^\\/]*\.zip$/i;
+const RECORDING = /\.(webm|mp4|mov|mkv)$|trace[^\\/]*\.zip$/i;
+const TRACE = /\.trace$/i;
 const TIMING_DATA = /\.(json|jsonl|csv|sqlite|db|cpuprofile)$/i;
 const NEEDS_RECORDING = ["Reproduced", "Confirmed", "Insufficient fix"];
 const LUCKY_PASS_RISK = 0.05;
@@ -109,8 +112,13 @@ const RUN_RULES = {
 };
 
 const presenceOnly = () => [];
+const namesFix = (value) => {
+	const [, code, link] = value.match(WRAPPED) ?? [];
+	const artifact = code ?? link ?? value;
+	return URL_TOKEN.test(artifact) || COMMIT_SHA.test(artifact);
+};
 const linksFix = ({ fixArtifact }) => [
-	!URL_TOKEN.test(fixArtifact.value) && 'a fix verdict needs a URL in "Fix artifact:"',
+	!namesFix(fixArtifact.value) && 'a fix verdict needs a URL or a commit SHA in "Fix artifact:"',
 ];
 const REPRODUCE_RULES = {
 	Reproduced: presenceOnly,
@@ -130,9 +138,27 @@ if (!file) {
 	process.exit(2);
 }
 
-const raw = fs.readFileSync(file, "utf8").replace(/^\uFEFF/, "").split(/\r?\n/);
 const problems = [];
 const fail = (line, message) => problems.push(`${file}:${line}: ${message}`);
+function report(token) {
+	console.log(`${file}: verdict=${token} problems=${problems.length}`);
+	for (const problem of problems) console.error(problem);
+	process.exit(problems.length > 0 ? 1 : 0);
+}
+
+let bytes;
+try {
+	bytes = fs.readFileSync(file);
+} catch (error) {
+	console.error(`${file}: ${error.message}`);
+	process.exit(2);
+}
+const utf16 = { fffe: "UTF-16LE", feff: "UTF-16BE" }[bytes.subarray(0, 2).toString("hex")];
+if (utf16) {
+	fail(1, `the file is ${utf16}. Save it as UTF-8`);
+	report("missing");
+}
+const raw = bytes.toString("utf8").replace(/^\uFEFF/, "").split(/\r?\n/);
 
 let start = 0;
 if (raw[0] === "---") start = raw.indexOf("---", 1) + 1;
@@ -200,9 +226,9 @@ function readFields(section, labels) {
 	);
 	const fields = {};
 	for (const line of proseLines(section)) {
-		const match = line.text.match(/^\s*(?:[-*]\s+)?([A-Za-z -]+?)\s*:\s*(.*)$/);
-		const key = match && keyByLabel[match[1].replace(/\s+/g, " ").toLowerCase()];
-		const value = match?.[2].trim();
+		const match = line.text.match(/^\s*(?:[-*]\s+)?(\*\*|__)?([A-Za-z -]+?)\s*(?:\1\s*:|:\s*\1)\s*(.*)$/);
+		const key = match && keyByLabel[match[2].replace(/\s+/g, " ").toLowerCase()];
+		const value = match?.[3].trim();
 		if (!key || !value) continue;
 		if (fields[key]) fail(line.n, `${labels[key]} appears more than once`);
 		else fields[key] = { value, n: line.n };
@@ -217,8 +243,8 @@ function checkVerdictLines(section, verdict) {
 	const absent = Object.keys(VERDICT_FIELDS).filter((key) => !fields[key]);
 	for (const key of absent) fail(section.n, `Verdict lacks "${VERDICT_FIELDS[key]}:"`);
 	if (absent.length) return;
-	if (!URL_TOKEN.test(fields.fixArtifact.value) && !NONE.test(fields.fixArtifact.value)) {
-		fail(fields.fixArtifact.n, 'Fix artifact: write a URL or "none"');
+	if (!namesFix(fields.fixArtifact.value) && !NONE.test(fields.fixArtifact.value)) {
+		fail(fields.fixArtifact.n, 'Fix artifact: write a URL, a commit SHA, or "none"');
 	}
 	for (const message of rule(fields).filter(Boolean)) fail(section.n, message);
 }
@@ -235,7 +261,7 @@ function readRunRecord(section) {
 	for (const key of COUNT_FIELDS) {
 		const field = record[key];
 		if (!field) continue;
-		delete record[key];
+		record[key] = null;
 		const count = field.value.match(COUNT);
 		if (!count) {
 			fail(field.n, `${RUN_FIELDS[key]} must start with "K of N"`);
@@ -252,12 +278,12 @@ function readRunRecord(section) {
 function checkRunRecord(section, verdict, record) {
 	const rule = RUN_RULES[verdict];
 	const needs = ["surface", "environment", ...(rule?.needs ?? [])];
-	const missing = needs.filter((key) => !record[key]);
+	const missing = needs.filter((key) => record[key] === undefined);
 	for (const key of missing) fail(section.n, `Surface and runs lacks "${RUN_FIELDS[key]}:"`);
 	if (record.surface && !SURFACE.test(record.surface.value)) {
-		fail(record.surface.n, "Surface names no UI, CLI, API, browser, desktop, mobile, harness, or trace");
+		fail(record.surface.n, "Surface names no UI, CLI, API, service, browser, desktop, mobile, harness, or trace");
 	}
-	if (!rule || missing.length) return;
+	if (!rule || needs.some((key) => !record[key])) return;
 	for (const key of COUNT_FIELDS) {
 		if (rule.needs.includes(key) && record[key].total < 2) {
 			fail(record[key].n, `${RUN_FIELDS[key]} needs at least 2 runs`);
@@ -266,34 +292,46 @@ function checkRunRecord(section, verdict, record) {
 	for (const message of rule.check(record).filter(Boolean)) fail(section.n, message);
 }
 
+function hasFrames(trace) {
+	const frames = path.join(path.dirname(trace), "screencast");
+	return fs.existsSync(frames) && fs.statSync(frames).isDirectory() && fs.readdirSync(frames).length > 0;
+}
+
 function checkEvidence(section, verdict, timing) {
 	const base = path.dirname(path.resolve(file));
 	const countsAsRecording = (name) => RECORDING.test(name) || (timing && TIMING_DATA.test(name));
 	let cited = 0;
 	let recorded = false;
+	let frameless = null;
 	for (const line of proseLines(section)) {
 		for (const match of line.text.matchAll(/`([^`]+)`/g)) {
 			const token = match[1].trim();
 			if (URL_TOKEN.test(token)) {
 				cited++;
-				recorded ||= countsAsRecording(token.replace(/[?#].*$/, ""));
+				const name = token.replace(/[?#].*$/, "");
+				recorded ||= countsAsRecording(name);
+				if (TRACE.test(name)) frameless ??= { token, n: line.n };
 				continue;
 			}
-			if (/\s/.test(token)) continue;
 			const candidate = token.replace(LINE_SUFFIX, "");
+			if (!candidate) continue;
 			const target = path.resolve(base, candidate);
-			if (!fs.existsSync(target)) {
-				if (PATH_TOKEN.test(candidate)) fail(line.n, `evidence path not found: ${token}`);
+			const exists = fs.existsSync(target);
+			if (!exists && !PATH_TOKEN.test(candidate)) continue;
+			cited++;
+			if (!exists) {
+				fail(line.n, `evidence path not found: ${token}`);
 				continue;
 			}
-			cited++;
 			const stat = fs.statSync(target);
 			if (stat.isFile() && stat.size === 0) fail(line.n, `evidence file is empty: ${token}`);
-			else recorded ||= countsAsRecording(candidate);
+			else if (TRACE.test(candidate) && !hasFrames(target)) frameless ??= { token, n: line.n };
+			else recorded ||= countsAsRecording(candidate) || TRACE.test(candidate);
 		}
 	}
 	if (!cited) fail(section.n, "Evidence cites no backticked path or URL");
 	if (NEEDS_RECORDING.includes(verdict) && !recorded) {
+		if (frameless) fail(frameless.n, `a .trace file counts only with its screencast folder beside it: ${frameless.token}`);
 		const needed = timing ? "a recording or timing data in Evidence" : "a recording in Evidence, a video or a trace";
 		fail(section.n, `${verdict} needs ${needed}`);
 	}
@@ -317,7 +355,7 @@ for (const title of REQUIRED_SECTIONS) {
 	const text = bodyText(section);
 	if (title === "Verdict") {
 		verdict = matchVerdict(text);
-		if (!verdict) fail(section.n, "Verdict lacks an allowed token");
+		if (!verdict) fail(section.n, `Verdict lacks an allowed token, one of ${ALLOWED_VERDICTS.join(", ")}`);
 		if (!LABEL.test(text)) fail(section.n, "Verdict lacks a measured, inferred, or guess label");
 		checkVerdictLines(section, verdict);
 	} else if (title === "Expected and broken state") {
@@ -336,7 +374,4 @@ for (const title of REQUIRED_SECTIONS) {
 	}
 }
 
-const token = verdict ?? "missing";
-console.log(`${file}: verdict=${token} problems=${problems.length}`);
-for (const problem of problems) console.error(problem);
-process.exit(problems.length > 0 ? 1 : 0);
+report(verdict ?? "missing");

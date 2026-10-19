@@ -11,7 +11,7 @@ Bundled skills live at `../<name>/SKILL.md` from this file, so put this file's a
 
 Cite each principle that shaped a decision and the specific choice it changed. Cite only principles whose leaf `SKILL.md` you read this session.
 
-Read-only on product code by default. A QA run observes, reproduces, measures, and grades the system under test. It never patches product source code or merges pull requests unless the operator explicitly asks for a test harness file under `.cursor/skills/verify-*/` or a test directory.
+Read-only on product code by default. A QA run observes, reproduces, measures, and grades the system under test. It never patches product source code unless the operator explicitly asks for a test harness file under `.cursor/skills/verify-*/` or a test directory.
 
 Open no window on the user's desktop. Run browsers headless, start no process that opens a window, such as through `Start-Process`, and open no viewer for a video, a trace, or a report.
 
@@ -35,7 +35,7 @@ Locking down a bug with an executable test uses `../regression-pin/SKILL.md`.
 
 Every prose surface and defect report passes through `../unslop/SKILL.md`.
 
-Multi-step QA runs log each phase decision with `node scripts/log.mjs <logfile> <phase> <decision> <why> <evidence> <result>`. Write verdict files in the format at `references/verdict-file.md` and validate them with `node scripts/check-verdict.mjs <verdict.md>`. Run both commands from the plugin root.
+Multi-step QA runs log each phase decision with `node scripts/log.mjs <logfile> <phase> <decision> <why> <evidence> <result>`. Write verdict files in the format at `references/verdict-file.md` and validate them with `node scripts/check-verdict.mjs <verdict.md>`. Run both commands from the plugin root. Give `<logfile>` an absolute path in the artifact directory that `references/settings.md` describes, because a relative path lands in the plugin folder.
 
 ## Principles
 

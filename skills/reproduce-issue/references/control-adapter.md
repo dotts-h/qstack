@@ -4,7 +4,7 @@ The reproduce-issue skill does not know how to start or drive every app. The use
 
 Set its skill name in `control.skill_name`, in the settings file that [`settings.md`](../../qstack-mode/references/settings.md) describes.
 
-Set the completed user-facing feature map path in `control.feature_map_path`. Copy and fill [`feature-map.example.md`](./feature-map.example.md) outside this skill directory, for example to `.cursor/qstack/feature-map.md`, instead of editing the example.
+Set the completed user-facing feature map path in `control.feature_map_path`. When the control skill is a verification skill that [`create-verification-skill`](../../create-verification-skill/SKILL.md) generated, use its `.cursor/skills/verify-<app>/features/README.md`, and read each feature file it links as a map section. Otherwise copy and fill [`feature-map.example.md`](./feature-map.example.md) outside this skill directory, for example to `.cursor/qstack/feature-map.md`, instead of editing the example.
 
 If the settings file, the skill, the feature map, or a required capability is absent, ambiguous, or incomplete, reproduction must fail closed.
 
@@ -62,7 +62,7 @@ The adapter must expose ways to:
 - Interact with default, hover, focus-visible, active, disabled, loading, empty, error, selected, open, expanded, and feature-specific states when they apply.
 - Arrange a state through safe fixture data, permissions, flags, service responses, or supported test controls.
 - Reset the feature between independent repro runs.
-- Capture the screenshot, video, and read-only cross-check named by the feature map.
+- Capture the screenshot, recording, and read-only cross-check named by the feature map.
 
 Use roles, accessible names, ARIA relationships, stable component markers, and purpose-named data attributes. Never use generated CSS or StyleX classes, dynamic hashes, child indexes, or brittle DOM position.
 
@@ -98,7 +98,7 @@ The screenshot must show enough app chrome to prove that the correct app is unde
 
 ### Recording
 
-Start and stop a recording around the full repro path. A video counts. So does a trace that holds a screencast, such as a Playwright trace. Screenshots alone do not count. A recording must open no window on the user's desktop. For a browser on Windows, follow [Browser targets](#browser-targets).
+Start and stop a recording around the full repro path. A video counts. So does a trace that holds a screencast, such as a Playwright trace. Screenshots alone do not count. A recording must open no window on the user's desktop. For a browser, [Browser targets](#browser-targets) says which recording to make.
 
 Return:
 
@@ -143,6 +143,7 @@ The adapter must:
 
 A web app adapter drives the page through the Playwright CLI, `playwright-cli`. Its agent skill, installed with `playwright-cli install --skills`, documents its commands. When the app already runs at a URL, `playwright-cli` itself can be `control.skill_name`. When the app must be built or started first, write a project adapter skill that starts it and drives it through the CLI.
 
+- Run every `playwright-cli` command from the artifact directory. The CLI writes its output to a `.playwright-cli` folder in the directory it runs from, so a run from the workspace root leaves captures in the repository.
 - Give each repro run its own named session, as in `playwright-cli -s=<run> open <url>`, and close it before the next run. A new session starts from an empty in-memory profile, which is the reset between runs.
 - Act on element refs from the latest snapshot. Refs expire with the snapshot, so take a new one after the page changes.
 - Never store a ref in a check or in the feature map. The CLI prints the Playwright code behind each action. Store the role, label, or test-id locator that code names.
@@ -152,9 +153,10 @@ A web app adapter drives the page through the Playwright CLI, `playwright-cli`. 
 - A native dialog, such as an alert, appears in no screenshot and no video. Its evidence is the CLI's record of the dialog in the run log.
 - An interactive element with no role or accessible name in the snapshot is a testability gap and a candidate accessibility defect. Record it.
 - Video needs Playwright's ffmpeg build, which `playwright-cli install-browser ffmpeg` installs. After a failed `video-start`, `video-stop` still prints a file path, so check the file before you cite it.
-- On Windows, each `video-start` opens a visible console window for ffmpeg that stays open until `video-stop` ([microsoft/playwright#43515](https://github.com/microsoft/playwright/issues/43515)). Unless your CLI version hides that window, record a trace there instead with `tracing-start` and `tracing-stop`. A trace opens no window. It does hold the page's scripts, so when the run must not capture them, recording is missing and the outcome is `Blocked`.
+- `control.recording` picks the recording, per [`settings.md`](../../qstack-mode/references/settings.md). With `video`, record with `video-start` and `video-stop`. With `trace`, record with `tracing-start` and `tracing-stop`. Without it, record a trace on Windows and a video elsewhere. On Windows, each `video-start` opens a visible console window for ffmpeg that stays open until `video-stop` ([microsoft/playwright#43515](https://github.com/microsoft/playwright/issues/43515)). An agent cannot see whether its CLI build hides that window, so only the operator may choose `video` there. Never start a video to learn whether a window opens.
+- A trace opens no window, but it holds the page's scripts. When the run must not capture them and the recording would be a trace, record nothing. A timing verdict then cites the exported performance entries as its timing data, per [`perf-gate.md`](../../qstack-mode/playbooks/perf-gate.md). Any other run ends `Blocked`, and `Missing:` names a recording that holds no page scripts.
 
-Cursor's built-in browser may explore a page. It must not drive a repro run or a check, and a verdict must not cite its captures. On Cursor 3.25.9, its coordinate click ran the click handler of a disabled button and of a disabled input, and every event it sent had `isTrusted` set to false. Its ref click rejected `<input type="button">` controls, and its snapshot omitted a value that a text field held.
+Do not use Cursor's built-in browser, even to explore a page. It is not headless. On Cursor 3.25.9, its coordinate click ran the click handler of a disabled button and of a disabled input, and every event it sent had `isTrusted` set to false. Its ref click rejected `<input type="button">` controls, and its snapshot omitted a value that a text field held.
 
 ## Environment translation
 
@@ -181,9 +183,7 @@ Before relying on the adapter, run one harmless adapter check:
 5. Exercise one disposable state through mapped adapter actions.
 6. Inspect the resulting state.
 7. Capture a screenshot.
-8. Make a short recording, then confirm the file exists and is not empty.
+8. Make a short recording of the kind the run will cite, then confirm the file exists and is not empty. Skip this step when [Browser targets](#browser-targets) leaves the run with no recording.
 9. Clean up.
 
-Enable repro work only when all nine steps succeed. The check itself posts nothing and changes no product data.
-
-Sometimes the expected behavior can be learned only by using the product, such as on a public site with no spec. Then explore the product before the setup check, and write the feature-map sections from what you saw. Exploring records no verdict.
+Enable repro work only when every step that applies succeeds. The check itself posts nothing and changes no product data.

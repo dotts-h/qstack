@@ -2,7 +2,7 @@
 
 **You own the change report.** A pixel delta proves that a state changed. A person decides whether the change was intended. Do not touch the baseline to make a diff pass.
 
-Bundled skill paths are relative to `skills/qstack-mode/SKILL.md`.
+Bundled skill paths are relative to `skills/qstack-mode/SKILL.md`. Playbooks named below sit in this folder.
 
 1. Log each phase decision from the plugin root with `node scripts/log.mjs <logfile> <phase> <decision> <why> <evidence> <result>`.
 2. Capture baseline screenshots across each state of the component before any change. The baseline is the side you compare against. For a code change, it is the revision before the change, or the parent revision when the change is already in the tree. For a comparison of accounts or environments, it is the account or environment you compare against. Take full-page captures, because a viewport capture depends on the scroll position that an earlier state left. Without a baseline you have no parity claim.
@@ -11,6 +11,6 @@ Bundled skill paths are relative to `skills/qstack-mode/SKILL.md`.
 5. Capture each state twice on the real UI through the control adapter at `../reproduce-issue/references/control-adapter.md`, each time from a fresh render. Run the image diff against the baseline outside the masks. A delta is a change only when both captures show it. Log a delta that only one capture shows, with its diff image.
 6. Sort each change. A behavior change alters content or state, such as text, values, image sources, links, which elements exist, whether a state renders, or whether a native dialog opens. Read the DOM on both sides to tell. A visual change alters only position, size, rotation, color, or font. Send each behavior change to `reproduce-and-triage.md`. It does not decide this playbook's outcome.
 7. For each visual change, save the baseline, the capture, and the diff image. Hand them to a person to accept or reject. Keep capturing the other states while the person reviews. When no person can answer during the run, write each visual change as one accept-or-reject question in a single questions file, and cite that file in the verdict.
-8. Emit `Pass` when every state was captured, and no visual change remains or a person accepted each one. Emit `Fail` when a person rejected a visual change. Emit `Unproven` while a visual change waits for a person, or when a state could not be captured, including a state that a behavior defect blocks. Do not patch product code.
+8. Emit `Pass` when every state was captured, and no visual change remains or a person accepted each one. Emit `Fail` when a person rejected a visual change. Emit `Unproven` while a visual change waits for a person, or when a state could not be captured, including a state that a behavior defect blocks. Record the change side's capture passes as `Runs: K of N`, where K counts the passes that show a visual change no person accepted. A delta that only one capture shows is not a change, so it adds nothing to K. Do not patch product code.
 
 **Reply.** The states you captured, the baseline location, each mask and its reason, each visual change with its diff image path and the person's decision, the questions file when one exists, each behavior change and where you sent it, and the outcome token.

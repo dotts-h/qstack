@@ -7,7 +7,7 @@ qstack is a Cursor plugin for QA engineering. The version in `.cursor-plugin/plu
 The entry points are `/qstack-mode` and `/setup-qstack`.
 
 - [`/qstack-mode`](skills/qstack-mode/SKILL.md) runs a structured QA workflow.
-- [`/setup-qstack`](skills/setup-qstack/SKILL.md) configures the model for each QA role. The same command sets the reasoning budget.
+- [`/setup-qstack`](skills/setup-qstack/SKILL.md) configures the models that the how and why skills give their subagents. The same command sets the reasoning budget.
 
 ## Playbooks
 
@@ -24,13 +24,13 @@ There are six core playbooks.
 - [Release gate](skills/qstack-mode/playbooks/release-gate.md) grades a stack before merge.
 - [Automate check](skills/qstack-mode/playbooks/automate-check.md) creates, audits, or pins a verification skill.
 
-### Specialist playbooks
+### Focused playbooks
 
-There are seven specialist playbooks.
+There are seven focused playbooks.
 
 - [Diagnose live](skills/qstack-mode/playbooks/diagnose-live.md) diagnoses a live CPU, heap, or CDP symptom.
 - [Diagnose trace](skills/qstack-mode/playbooks/diagnose-trace.md) diagnoses a captured cpuprofile, trace, or heapsnapshot.
-- [Visual parity](skills/qstack-mode/playbooks/visual-parity.md) compares screenshots against a baseline and routes each change to a person.
+- [Visual parity](skills/qstack-mode/playbooks/visual-parity.md) compares screenshots against a baseline, routes each visual change to a person, and sends each behavior change to reproduce and triage.
 - [Characterization pin](skills/qstack-mode/playbooks/characterization-pin.md) records current behavior before structure moves.
 - [Regression lane](skills/qstack-mode/playbooks/regression-lane.md) runs one load-bearing scenario on trunk and on head.
 - [Flake triage](skills/qstack-mode/playbooks/flake-triage.md) classifies a red CI check before any retrigger.

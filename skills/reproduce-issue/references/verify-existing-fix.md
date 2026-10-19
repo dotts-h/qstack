@@ -24,7 +24,7 @@ Record:
 
 - Baseline revision
 - Patched revision
-- Pull request or commit URL
+- Pull request or commit URL, or the commit SHA when the commit has no URL
 - Build and environment inputs shared by the baseline and patched builds
 
 Use regular `github.com` pull request links.
@@ -85,11 +85,11 @@ The baseline reproduces, and a patched run still shows the symptom or a check we
 
 ### Inconclusive
 
-The baseline does not reproduce, the patched app cannot run, or the evidence does not show the discriminating state.
+The baseline does not reproduce, the patched app cannot run, the evidence does not show the discriminating state, or every patched run passed but too few ran to meet the patched run rule.
 
 - Outcome is `Inconclusive`.
 - Do not claim success.
-- State which half could not be measured.
+- State which half could not be measured. When clean patched runs fall short of the rule, `Missing:` names how many more it needs.
 - Automated runs keep this result in the operations thread or run output and do not post it to the source thread unless a direct question requires an answer.
 
 ## Cleanup

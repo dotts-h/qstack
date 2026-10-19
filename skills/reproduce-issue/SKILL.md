@@ -13,7 +13,7 @@ It runs in two settings.
 - **Interactive.** The report is the user's message, a local description, or a tracker ticket. Return the verdict in the reply.
 - **Automated thread.** A configured source thread supplies the report. Post only under that thread, and only when the rules below allow it.
 
-Load [`references/control-adapter.md`](references/control-adapter.md) before driving the app. If the adapter, a required capability, or the completed feature map is missing, stop. Do not treat a screenshot of the wrong app, a unit test, a state mutation, or a source reading as a reproduction.
+Load [`references/control-adapter.md`](references/control-adapter.md) before driving the app. If the adapter or a required capability is missing, stop. Do not treat a screenshot of the wrong app, a unit test, a state mutation, or a source reading as a reproduction.
 
 Run the verdict text through [`../unslop/SKILL.md`](../unslop/SKILL.md) before you show it or post it.
 
@@ -64,13 +64,15 @@ Re-read the thread before driving. If an open pull request or merged commit plau
 
 ## 2. Load the control adapter
 
-Find the settings file that [`../qstack-mode/references/settings.md`](../qstack-mode/references/settings.md) describes. Run `node scripts/check-settings.mjs <settings file> reproduce` from the plugin root. When the file is missing or the checker prints a problem, the outcome is `Blocked`, and `Missing:` names the settings file and each problem.
+Find the settings file that [`../qstack-mode/references/settings.md`](../qstack-mode/references/settings.md) describes. Run `node scripts/check-settings.mjs <settings file> reproduce` from the plugin root. When the file is missing or the checker prints a problem, the outcome is `Blocked`, and `Missing:` names the settings file and each problem. When the only problem is a missing feature map and the product is the only spec, explore first, as described below.
 
 Read [`references/control-adapter.md`](references/control-adapter.md) and the completed map at `control.feature_map_path`, then invoke the skill named by `control.skill_name`.
 
+Sometimes the expected behavior can be learned only by using the product, such as on a public site with no spec. Then a missing map, or a map with no section for the reported path, sends you to explore. Explore the product through that skill, write the sections at `control.feature_map_path` from what you saw, and run the settings check again. Exploring records no verdict.
+
 Read the feature-map section that matches the reported user path before driving. If no section covers the feature, mark the run blocked. Do not invent a path or a selector.
 
-Require every capability in the control-adapter contract, including bring-up, real UI or CLI driving, read-only inspection, screenshots, recording, reset, and cleanup. Screenshots alone do not satisfy recording. If any required capability is missing, the outcome is `Blocked`.
+Require every capability in the control-adapter contract, including bring-up, real UI or CLI driving, read-only inspection, screenshots, recording, reset, and cleanup. Screenshots alone do not satisfy recording. A timing verdict whose runs [Browser targets](references/control-adapter.md#browser-targets) leaves with no recording cites its timing data instead. If any required capability is missing, the outcome is `Blocked`.
 
 ## 3. Study the report
 
@@ -100,7 +102,7 @@ Before calling it reproduced:
 
 An expected dialog, loading state, or setup step is not the bug. Capture the final state that distinguishes correct from broken behavior.
 
-Use the configured repro budget when one exists. Otherwise make at least two runs. Record them as `Runs: K of N`, where N counts the runs that reached the divergence and K counts the runs that showed the broken state. A run that never reached the divergence is a driving problem. Fix the drive and do not count it. If K is below 2, the outcome is `Could not reproduce`. If the environment cannot provide a required capability, the outcome is `Blocked`, and the verdict names what was missing.
+Make at least two runs. Record them as `Runs: K of N`, where N counts the runs that reached the divergence and K counts the runs that showed the broken state. A run that never reached the divergence is a driving problem. Fix the drive and do not count it. If K is below 2, the outcome is `Could not reproduce`. If the environment cannot provide a required capability, the outcome is `Blocked`, and the verdict names what was missing.
 
 Before declaring an environment block, restate the defect without platform-specific nouns and try a safe translation only when it tests the same behavior. Label translated evidence as translated. Hardware prompts, operating-system permission dialogs, device-only APIs, and unavailable account states may still be real blocks.
 
