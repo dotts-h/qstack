@@ -164,10 +164,11 @@ test("timing data counts only with the marker, and the marker needs timing data"
 	const empty = check(verdict("Reproduced", timed, evidence), undefined, "").problems;
 	assert.match(empty, /evidence file is empty: perf\/run-1\.json/);
 	assert.match(empty, /Reproduced needs a recording or timing data in Evidence/);
-	const unnamed = [ORDER, "Runs: 2 of 2", "Timing: none"];
-	const placeholder = check(verdict("Reproduced", unnamed, evidence)).problems;
-	assert.match(placeholder, /Timing: name the clock that timed each run/);
-	assert.match(placeholder, /Reproduced needs a recording in Evidence, a video or a trace/);
+	for (const value of ["none", "n/a", "-"]) {
+		const placeholder = check(verdict("Reproduced", [ORDER, "Runs: 2 of 2", `Timing: ${value}`], evidence)).problems;
+		assert.match(placeholder, /Timing: name the clock that timed each run/, value);
+		assert.match(placeholder, /Reproduced needs a recording in Evidence, a video or a trace/, value);
+	}
 });
 
 test("the timing fixtures pass with the marker and fail without it", () => {
