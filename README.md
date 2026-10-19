@@ -24,9 +24,9 @@ There are six core playbooks.
 - [Release gate](skills/qstack-mode/playbooks/release-gate.md) grades a stack before merge.
 - [Automate check](skills/qstack-mode/playbooks/automate-check.md) creates, audits, or pins a verification skill.
 
-### Specialist playbooks
+### Focused playbooks
 
-There are seven specialist playbooks.
+There are seven focused playbooks.
 
 - [Diagnose live](skills/qstack-mode/playbooks/diagnose-live.md) diagnoses a live CPU, heap, or CDP symptom.
 - [Diagnose trace](skills/qstack-mode/playbooks/diagnose-trace.md) diagnoses a captured cpuprofile, trace, or heapsnapshot.
