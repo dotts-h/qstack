@@ -46,6 +46,23 @@ test("a file that declares a base resolves its paths from that base", () => {
 	}
 });
 
+test("fenced code is not checked", () => {
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), "qstack-markdown-"));
+	const file = path.join(root, "skills", "demo", "SKILL.md");
+	const broken = ["Read [the guide](guide.md).", "Run `scripts/missing.mjs` first.", "Stop \u2014 here."];
+	try {
+		fs.mkdirSync(path.dirname(file), { recursive: true });
+		const lines = ["---", "name: demo", "description: Demo.", "---", "```text", ...broken, "```", "~~~", ...broken, "~~~", broken[1]];
+		fs.writeFileSync(file, lines.join("\n"));
+		const { status, problems } = check(root);
+		assert.equal(status, 1);
+		assert.match(problems, /SKILL\.md:15: path not found scripts\/missing\.mjs/);
+		assert.equal(problems.trim().split("\n").length, 1, problems);
+	} finally {
+		fs.rmSync(root, { recursive: true, force: true });
+	}
+});
+
 test("each kind of markdown problem is reported", () => {
 	const root = fs.mkdtempSync(path.join(os.tmpdir(), "qstack-markdown-"));
 	const write = (name, lines) => {
