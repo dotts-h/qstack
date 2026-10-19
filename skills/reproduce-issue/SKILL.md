@@ -13,7 +13,7 @@ It runs in two settings.
 - **Interactive.** The report is the user's message, a local description, or a tracker ticket. Return the verdict in the reply.
 - **Automated thread.** A configured source thread supplies the report. Post only under that thread, and only when the rules below allow it.
 
-Load [`references/control-adapter.md`](references/control-adapter.md) before driving the app. If the adapter, a required capability, or the completed feature map is missing, stop. Do not treat a screenshot of the wrong app, a unit test, a state mutation, or a source reading as a reproduction.
+Load [`references/control-adapter.md`](references/control-adapter.md) before driving the app. If the adapter or a required capability is missing, stop. Do not treat a screenshot of the wrong app, a unit test, a state mutation, or a source reading as a reproduction.
 
 Run the verdict text through [`../unslop/SKILL.md`](../unslop/SKILL.md) before you show it or post it.
 
@@ -64,9 +64,11 @@ Re-read the thread before driving. If an open pull request or merged commit plau
 
 ## 2. Load the control adapter
 
-Find the settings file that [`../qstack-mode/references/settings.md`](../qstack-mode/references/settings.md) describes. Run `node scripts/check-settings.mjs <settings file> reproduce` from the plugin root. When the file is missing or the checker prints a problem, the outcome is `Blocked`, and `Missing:` names the settings file and each problem.
+Find the settings file that [`../qstack-mode/references/settings.md`](../qstack-mode/references/settings.md) describes. Run `node scripts/check-settings.mjs <settings file> reproduce` from the plugin root. When the file is missing or the checker prints a problem, the outcome is `Blocked`, and `Missing:` names the settings file and each problem. When the only problem is a missing feature map and the product is the only spec, explore first, as described below.
 
 Read [`references/control-adapter.md`](references/control-adapter.md) and the completed map at `control.feature_map_path`, then invoke the skill named by `control.skill_name`.
+
+Sometimes the expected behavior can be learned only by using the product, such as on a public site with no spec. Then a missing map, or a map with no section for the reported path, sends you to explore. Explore the product through that skill, write the sections at `control.feature_map_path` from what you saw, and run the settings check again. Exploring records no verdict.
 
 Read the feature-map section that matches the reported user path before driving. If no section covers the feature, mark the run blocked. Do not invent a path or a selector.
 

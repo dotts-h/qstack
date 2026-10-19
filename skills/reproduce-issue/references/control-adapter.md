@@ -187,5 +187,3 @@ Before relying on the adapter, run one harmless adapter check:
 9. Clean up.
 
 Enable repro work only when every step that applies succeeds. The check itself posts nothing and changes no product data.
-
-Sometimes the expected behavior can be learned only by using the product, such as on a public site with no spec. Then explore the product before the setup check, and write the feature-map sections from what you saw. Exploring records no verdict.
