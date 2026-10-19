@@ -98,7 +98,7 @@ The screenshot must show enough app chrome to prove that the correct app is unde
 
 ### Recording
 
-Start and stop a recording around the full repro path. A video counts. So does a trace that holds a screencast, such as a Playwright trace. Screenshots alone do not count.
+Start and stop a recording around the full repro path. A video counts. So does a trace that holds a screencast, such as a Playwright trace. Screenshots alone do not count. A recording must open no window on the user's desktop. For a browser on Windows, follow [Browser targets](#browser-targets).
 
 Return:
 
@@ -152,6 +152,7 @@ A web app adapter drives the page through the Playwright CLI, `playwright-cli`. 
 - A native dialog, such as an alert, appears in no screenshot and no video. Its evidence is the CLI's record of the dialog in the run log.
 - An interactive element with no role or accessible name in the snapshot is a testability gap and a candidate accessibility defect. Record it.
 - Video needs Playwright's ffmpeg build, which `playwright-cli install-browser ffmpeg` installs. After a failed `video-start`, `video-stop` still prints a file path, so check the file before you cite it.
+- On Windows, each `video-start` opens a visible console window for ffmpeg that stays open until `video-stop` ([microsoft/playwright#43515](https://github.com/microsoft/playwright/issues/43515)). Unless your CLI version hides that window, record a trace there instead with `tracing-start` and `tracing-stop`. A trace opens no window. It does hold the page's scripts, so when the run must not capture them, recording is missing and the outcome is `Blocked`.
 
 Cursor's built-in browser may explore a page. It must not drive a repro run or a check, and a verdict must not cite its captures. On Cursor 3.25.9, its coordinate click ran the click handler of a disabled button and of a disabled input, and every event it sent had `isTrusted` set to false. Its ref click rejected `<input type="button">` controls, and its snapshot omitted a value that a text field held.
 
@@ -180,7 +181,7 @@ Before relying on the adapter, run one harmless adapter check:
 5. Exercise one disposable state through mapped adapter actions.
 6. Inspect the resulting state.
 7. Capture a screenshot.
-8. Record a short clip, then confirm the file exists and is not empty.
+8. Make a short recording, then confirm the file exists and is not empty.
 9. Clean up.
 
 Enable repro work only when all nine steps succeed. The check itself posts nothing and changes no product data.

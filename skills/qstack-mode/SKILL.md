@@ -13,6 +13,8 @@ Cite each principle that shaped a decision and the specific choice it changed. C
 
 Read-only on product code by default. A QA run observes, reproduces, measures, and grades the system under test. It never patches product source code or merges pull requests unless the operator explicitly asks for a test harness file under `.cursor/skills/verify-*/` or a test directory.
 
+Open no window on the user's desktop. Run browsers headless, start no process that opens a window, such as through `Start-Process`, and open no viewer for a video, a trace, or a report.
+
 Unfamiliar subsystem or "how does X work?" routes to `../how/SKILL.md`.
 
 Regression history or "why is X shaped this way?" routes to `../why/SKILL.md`.
