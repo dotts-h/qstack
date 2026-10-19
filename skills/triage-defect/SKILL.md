@@ -53,6 +53,8 @@ Choose one category.
 
 Something violates intended behavior, such as wrong output, broken state, an error, a crash, a hang, a silent no-op, or a regression.
 
+A clearly broken state is a Bug, even when a reference build, a baseline account, or the spec text seems to allow it. Clearly broken includes a state that the user cannot leave, such as controls that stay disabled with no way back or a spinner that never ends. It also includes a product that contradicts itself, such as list buttons that still read Remove after the cart was emptied, or the same placeholder image on every product while each alt text names its product.
+
 ### Performance
 
 The report describes measurable slowness, excess memory, battery drain, jank, or another resource problem. Treat it as a bug, and preserve measurements and profiles.
@@ -69,7 +71,9 @@ The report asks how something works, states a preference without a concrete defe
 
 Cause tracing shows that another configured destination owns the issue.
 
-When the bug-versus-feature line is unclear, do not file. Ask one focused question in the report. Do not pick Bug or Feature request until the answer arrives. An automated thread uses the `other` marker for that case.
+### Unclassified
+
+The line between Bug and Feature request is unclear, and the state is not clearly broken. Do not file. Ask one focused question in the report, and keep this category until a person answers.
 
 ## 4. Route
 
@@ -131,7 +135,7 @@ Use this shape. The title names the area and the symptom. It does not name a gue
 ```markdown
 # <area and symptom>
 
-Classification: Bug | Performance | Feature request | Question or feedback | Reroute
+Classification: Bug | Performance | Feature request | Question or feedback | Reroute | Unclassified
 Duplicate: Confident duplicate | Possibly related | Weak resemblance | No match
 
 ## Expected
@@ -180,7 +184,7 @@ Never post a root message, a message in another channel, a broadcast, or a DM. P
 
 Post exactly one reply with `channel=SOURCE_CHANNEL_ID` and `thread_ts=SOURCE_THREAD_TS`. Lead with the outcome, link the tracker issue when there is one, mention a reroute or one missing fact when needed, and end with exactly one marker.
 
-Map the classification onto one marker. Bug uses `[qstack:bug]`. Performance uses `[qstack:performance]`. Feature request, Question or feedback, Reroute, and an unclear bug-versus-feature line use `[qstack:other]`. Add `tracker=` only when a tracker issue exists.
+Map the classification onto one marker. Bug uses `[qstack:bug]`. Performance uses `[qstack:performance]`. Feature request, Question or feedback, Reroute, and Unclassified use `[qstack:other]`. Add `tracker=` only when a tracker issue exists.
 
 ```text
 [qstack:bug]
