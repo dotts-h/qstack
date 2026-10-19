@@ -24,7 +24,7 @@ Record:
 
 - Baseline revision
 - Patched revision
-- Pull request or commit URL
+- Pull request or commit URL, or the commit SHA when the commit has no URL
 - Build and environment inputs shared by the baseline and patched builds
 
 Use regular `github.com` pull request links.

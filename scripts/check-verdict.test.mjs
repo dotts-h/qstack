@@ -336,12 +336,17 @@ test("a reproduce-issue verdict needs Fix artifact and Missing lines, a gate ver
 	assert.equal(check(verdict("Unproven", [], undefined, [])).status, 0);
 });
 
-test("Fix artifact holds a URL or none, and a fix verdict holds the URL", () => {
+test("Fix artifact holds a URL, a commit SHA, or none, and a fix verdict holds a URL or a SHA", () => {
 	const named = ["Fix artifact: PR 123", "Missing: none"];
-	assert.match(check(verdict("Reproduced", [ORDER, "Runs: 2 of 2"], undefined, named)).problems, /Fix artifact: write a URL or "none"/);
+	assert.match(check(verdict("Reproduced", [ORDER, "Runs: 2 of 2"], undefined, named)).problems, /Fix artifact: write a URL, a commit SHA, or "none"/);
 	const unlinked = ["Fix artifact: none", "Missing: none"];
 	const confirmed = [ORDER, "Baseline runs: 2 of 2", "Patched runs: 0 of 2", "Pass-to-fail: none"];
-	assert.match(check(verdict("Confirmed", confirmed, undefined, unlinked)).problems, /a fix verdict needs a URL in "Fix artifact:"/);
+	assert.match(check(verdict("Confirmed", confirmed, undefined, unlinked)).problems, /a fix verdict needs a URL or a commit SHA in "Fix artifact:"/);
+	const artifact = (value) => check(verdict("Confirmed", confirmed, undefined, [`Fix artifact: ${value}`, "Missing: none"]));
+	for (const sha of ["9b7e3d0", "9b7e3d0c1a2b3c4d5e6f708192a3b4c5d6e7f809"]) assert.equal(artifact(sha).status, 0, sha);
+	for (const near of ["9b7e3d", "9b7e3d0x", "9b7e3d0c1a2b3c4d5e6f708192a3b4c5d6e7f8090"]) {
+		assert.match(artifact(near).problems, /write a URL, a commit SHA, or "none"/, near);
+	}
 	const insufficient = [ORDER, "Baseline runs: 2 of 2", "Patched runs: 1 of 3", "Pass-to-fail: none"];
 	assert.match(check(verdict("Insufficient fix", insufficient, undefined, unlinked)).problems, /a fix verdict needs a URL/);
 });
