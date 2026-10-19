@@ -100,7 +100,7 @@ Before calling it reproduced:
 
 An expected dialog, loading state, or setup step is not the bug. Capture the final state that distinguishes correct from broken behavior.
 
-Use the configured repro budget when one exists. Otherwise make at least two runs. Record them as `Runs: K of N`, where N counts the runs that reached the divergence and K counts the runs that showed the broken state. A run that never reached the divergence is a driving problem. Fix the drive and do not count it. If K is below 2, the outcome is `Could not reproduce`. If the environment cannot provide a required capability, the outcome is `Blocked`, and the verdict names what was missing.
+Make at least two runs. Record them as `Runs: K of N`, where N counts the runs that reached the divergence and K counts the runs that showed the broken state. A run that never reached the divergence is a driving problem. Fix the drive and do not count it. If K is below 2, the outcome is `Could not reproduce`. If the environment cannot provide a required capability, the outcome is `Blocked`, and the verdict names what was missing.
 
 Before declaring an environment block, restate the defect without platform-specific nouns and try a safe translation only when it tests the same behavior. Label translated evidence as translated. Hardware prompts, operating-system permission dialogs, device-only APIs, and unavailable account states may still be real blocks.
 
