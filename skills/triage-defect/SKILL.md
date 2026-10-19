@@ -33,6 +33,8 @@ Use evidence already in the report before asking for more.
 
 ## 2. Trace the cause path
 
+In a [black-box run](../qstack-mode/SKILL.md#non-negotiables), skip this section and do not guess a code owner. Under Cause trace, write `unavailable` with the reason, then the facts that the surface showed.
+
 Do a bounded source and history pass before choosing a destination. This pass does not need a complete root cause. It must be strong enough to avoid routing a visible symptom to the wrong owner.
 
 Trace the path from the reported action to the observed result with [`../how/SKILL.md`](../how/SKILL.md). Use [`../why/SKILL.md`](../why/SKILL.md) when the report looks like a regression or touches defensive code.
@@ -42,8 +44,6 @@ Trace the path from the reported action to the observed result with [`../how/SKI
 3. Check recent changes when the report looks like a regression.
 4. Check whether a merged commit or open pull request already addresses the same symptom.
 5. Separate confirmed facts from hypotheses.
-
-If the repository cannot be read, do not guess a code owner. Continue with a conservative classification and say that cause tracing was unavailable.
 
 ## 3. Classify
 

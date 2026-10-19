@@ -12,12 +12,12 @@ If the settings file, the skill, the feature map, or a required capability is ab
 
 ### Bring up
 
-Start the requested app revision in the requested test environment.
+Start the requested app revision in the requested test environment, or open the running product at its URL.
 
 Input:
 
-- Repository and revision
-- Build or start mode
+- Repository and revision, or the URL when the product already runs
+- Build or start mode, or the build to pick in a running product, such as from a build dropdown
 - Workspace, account, fixture, and feature-state requirements
 - Artifact directory
 - Completed feature-map path
@@ -183,3 +183,5 @@ Before relying on the adapter, run one harmless adapter check:
 9. Clean up.
 
 Enable repro work only when all nine steps succeed. The check itself posts nothing and changes no product data.
+
+Sometimes the expected behavior can be learned only by using the product, such as on a public site with no spec. Then explore the product before the setup check, and write the feature-map sections from what you saw. Exploring records no verdict.

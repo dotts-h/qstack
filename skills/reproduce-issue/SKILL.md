@@ -25,7 +25,7 @@ Run the verdict text through [`../unslop/SKILL.md`](../unslop/SKILL.md) before y
 - An existing pull request or commit switches the run to verify mode. Follow [`references/verify-existing-fix.md`](references/verify-existing-fix.md). Do not edit that artifact or open another pull request.
 - No confirmed reproduction means no claim that a fix works.
 - Keep captures, recordings, logs, and tokens out of source control.
-- Use `github.com` pull request links when you cite an artifact.
+- When you cite a pull request, use its `github.com` link.
 
 ## 1. Take the report
 
@@ -79,6 +79,8 @@ Collect the exact action path, the expected behavior, the observed behavior, the
 Inspect screenshots and video. Use read-only workers for code history, blast radius, and media review when useful. Each worker gets a narrow question and no permission to post or to edit the product.
 
 Trace the reported action with [`../how/SKILL.md`](../how/SKILL.md). Use [`../why/SKILL.md`](../why/SKILL.md) when the report looks like a regression or touches defensive code. Form competing cause hypotheses and name the evidence that would separate them. This pass prepares the reproduction. It is not a license to patch.
+
+In a [black-box run](../qstack-mode/SKILL.md#non-negotiables), skip the code history and both traces. Form the hypotheses from the report and from what the surface shows.
 
 ## 4. Reproduce on independent runs
 

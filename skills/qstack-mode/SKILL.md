@@ -17,6 +17,8 @@ Unfamiliar subsystem or "how does X work?" routes to `../how/SKILL.md`.
 
 Regression history or "why is X shaped this way?" routes to `../why/SKILL.md`.
 
+A black-box run has no access to the product's source. Runs against a public site or a vendor app are black-box runs, and so is a run whose rules forbid reading the source. Such a run skips every step that needs the source, such as the `how` and `why` traces, a CPU profile, and naming the files that own a result. Mark each skipped step `skip: black-box run`.
+
 Before designing test cases or exploring, restate the testing mission via `../in-your-own-words/SKILL.md`.
 
 What a diff could break outside the changed lines routes to `../blast-radius/SKILL.md`.
