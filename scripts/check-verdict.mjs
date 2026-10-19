@@ -35,6 +35,7 @@ const RUN_FIELDS = {
 	baseline: "Baseline runs",
 	patched: "Patched runs",
 	passToFail: "Pass-to-fail",
+	timing: "Timing",
 };
 const COUNT_FIELDS = ["runs", "baseline", "patched"];
 const SURFACE = /\b(UI|CLI|API|browser|desktop|mobile|harness|trace)\b/i;
@@ -46,6 +47,7 @@ const PATH_TOKEN = /[\\/]|\.[A-Za-z][A-Za-z0-9]*$/;
 const LINE_SUFFIX = /:\d+(?::\d+)?$/;
 const LABEL = /\b(measured|inferred|guess)\b/i;
 const RECORDING = /\.(webm|mp4|mov|mkv|trace)$|trace[^\\/]*\.zip$/i;
+const TIMING_DATA = /\.(json|jsonl|csv|sqlite|db|cpuprofile)$/i;
 const NEEDS_RECORDING = ["Reproduced", "Confirmed", "Insufficient fix"];
 const LUCKY_PASS_RISK = 0.05;
 
@@ -226,6 +228,10 @@ function readRunRecord(section) {
 	if (record.passToFail && PLACEHOLDER.test(record.passToFail.value)) {
 		fail(record.passToFail.n, 'Pass-to-fail: write "none" or name the checks');
 	}
+	if (record.timing && (NONE.test(record.timing.value) || PLACEHOLDER.test(record.timing.value))) {
+		fail(record.timing.n, "Timing: name the clock that timed each run, or leave the line out");
+		delete record.timing;
+	}
 	for (const key of COUNT_FIELDS) {
 		const field = record[key];
 		if (!field) continue;
@@ -243,8 +249,7 @@ function readRunRecord(section) {
 	return record;
 }
 
-function checkRunRecord(section, verdict) {
-	const record = readRunRecord(section);
+function checkRunRecord(section, verdict, record) {
 	const rule = RUN_RULES[verdict];
 	const needs = ["surface", "environment", ...(rule?.needs ?? [])];
 	const missing = needs.filter((key) => !record[key]);
@@ -261,8 +266,9 @@ function checkRunRecord(section, verdict) {
 	for (const message of rule.check(record).filter(Boolean)) fail(section.n, message);
 }
 
-function checkEvidence(section, verdict) {
+function checkEvidence(section, verdict, timing) {
 	const base = path.dirname(path.resolve(file));
+	const countsAsRecording = (name) => RECORDING.test(name) || (timing && TIMING_DATA.test(name));
 	let cited = 0;
 	let recorded = false;
 	for (const line of proseLines(section)) {
@@ -270,7 +276,7 @@ function checkEvidence(section, verdict) {
 			const token = match[1].trim();
 			if (URL_TOKEN.test(token)) {
 				cited++;
-				recorded ||= RECORDING.test(token.replace(/[?#].*$/, ""));
+				recorded ||= countsAsRecording(token.replace(/[?#].*$/, ""));
 				continue;
 			}
 			if (/\s/.test(token)) continue;
@@ -283,12 +289,13 @@ function checkEvidence(section, verdict) {
 			cited++;
 			const stat = fs.statSync(target);
 			if (stat.isFile() && stat.size === 0) fail(line.n, `evidence file is empty: ${token}`);
-			else recorded ||= RECORDING.test(candidate);
+			else recorded ||= countsAsRecording(candidate);
 		}
 	}
 	if (!cited) fail(section.n, "Evidence cites no backticked path or URL");
 	if (NEEDS_RECORDING.includes(verdict) && !recorded) {
-		fail(section.n, `${verdict} needs a recording in Evidence, a video or a trace`);
+		const needed = timing ? "a recording or timing data in Evidence" : "a recording in Evidence, a video or a trace";
+		fail(section.n, `${verdict} needs ${needed}`);
 	}
 }
 
@@ -297,6 +304,7 @@ if (!h1) fail(1, "no H1 title");
 else if (sections.length && h1.n > sections[0].n) fail(h1.n, "H1 title comes after the first section");
 
 let verdict = null;
+let record = {};
 let previous = 0;
 for (const title of REQUIRED_SECTIONS) {
 	const section = sections.find((item) => item.title === title);
@@ -321,9 +329,10 @@ for (const title of REQUIRED_SECTIONS) {
 			}
 		}
 	} else if (title === "Surface and runs") {
-		checkRunRecord(section, verdict);
+		record = readRunRecord(section);
+		checkRunRecord(section, verdict, record);
 	} else if (title === "Evidence") {
-		checkEvidence(section, verdict);
+		checkEvidence(section, verdict, Boolean(record.timing));
 	}
 }
 

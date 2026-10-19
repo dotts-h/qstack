@@ -32,6 +32,7 @@ Write each field once, on its own line, in `## Surface and runs`.
 - `Runs: K of N` counts N runs that reached the divergence. K of them showed the broken state. A run showed it when one of its own artifacts shows it, such as its video, its screenshot, or its run log. The video alone is enough when the state was gone before the screenshot.
 - `Baseline runs: K of N` and `Patched runs: K of N` replace `Runs:` when you verify a fix.
 - `Pass-to-fail:` names the checks that passed on the baseline and fail on the patched revision, or says `none`.
+- `Timing:` marks a timing verdict, whose broken state is a duration. It names the clock that timed each run, such as the page's performance timeline. Leave it out of every other verdict.
 
 `Blocked`, `Inconclusive`, and `Unproven` need only `Surface:` and `Environment:`. Every other outcome also needs `Order:` and at least two runs in each count.
 
@@ -59,6 +60,8 @@ An intermittent bug needs more clean patched runs, because a fix with no effect 
 Backticks in `## Evidence` mark artifacts. Cite each artifact as a URL, an absolute path, or a path relative to the verdict file, with no spaces in the path. A path may end in a line suffix such as `:12`. Every backticked token that names a file must exist and must not be empty when the checker runs, so run the checker before cleanup. A token with a slash or a file extension counts as a file name, so keep code names such as method calls out of backticks in this section.
 
 `Reproduced`, `Confirmed`, and `Insufficient fix` also need a recording. A recording is a video ending in `.webm`, `.mp4`, `.mov`, or `.mkv`. A trace also counts, as a `.trace` file or a `.zip` file with `trace` in its name. Screenshots alone do not count.
+
+A timing verdict may cite timing data instead of a recording. Timing data is a `.json`, `.jsonl`, `.csv`, `.sqlite`, `.db`, or `.cpuprofile` file exported from its runs. Without `Timing:`, a data file does not count.
 
 ## Examples
 

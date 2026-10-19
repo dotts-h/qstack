@@ -10,7 +10,7 @@ const fail = (where, message) => problems.push(`${where}: ${message}`);
 const walk = (dir) =>
 	fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
 		const full = path.join(dir, entry.name);
-		if (entry.name === ".git") return [];
+		if (entry.name === ".git" || entry.name === "fixtures") return [];
 		if (entry.isDirectory()) return walk(full);
 		return full.endsWith(".md") ? [full] : [];
 	});
