@@ -194,6 +194,29 @@ test("runs are counted as K of N with an order", () => {
 	assert.match(check(verdict("Reproduced", ["Runs: 2 of 2"])).problems, /lacks "Order:"/);
 });
 
+test("a malformed count is one problem, not also a missing line", () => {
+	const malformed = [
+		["Runs: twice", /Runs must start with "K of N"/],
+		["Runs: 3 of 2", /Runs counts more failing runs than runs/],
+	];
+	for (const [runs, message] of malformed) {
+		const { problems } = check(verdict("Reproduced", [ORDER, runs]));
+		assert.match(problems, message);
+		assert.equal(problems.trim().split("\n").length, 1, problems);
+	}
+	assert.match(check(verdict("Reproduced", [ORDER])).problems, /lacks "Runs:"/);
+});
+
+test("bold labels count as labels", () => {
+	const plain = verdict("Reproduced", [ORDER, "Runs: 2 of 2"]);
+	for (const [open, close] of [["- **", ":**"], ["**", "**:"], ["__", ":__"]]) {
+		const bold = plain.replace(/^(Fix artifact|Missing|Surface|Environment|Order|Runs): /gm, `${open}$1${close} `);
+		assert.notEqual(bold, plain);
+		assert.equal(check(bold).status, 0, `${open}Label${close}`);
+	}
+	assert.match(check(plain.replace("Runs: 2 of 2", "- **Runs:** twice")).problems, /Runs must start with "K of N"/);
+});
+
 test("Confirmed needs more clean patched runs after an intermittent baseline", () => {
 	const fix = (patched) =>
 		verdict("Confirmed", [ORDER, "Baseline runs: 2 of 4", `Patched runs: ${patched}`, "Pass-to-fail: none"]);
@@ -205,6 +228,16 @@ test("each run field appears once and counts are whole numbers", () => {
 	assert.match(check(verdict("PASS", [ORDER, "Runs: 5 of 5", "Runs: 0 of 2"])).problems, /Runs appears more than once/);
 	assert.match(check(verdict("Reproduced", [ORDER, "Runs: 2 of 3.9"])).problems, /must start with "K of N"/);
 	assert.equal(check(verdict("Reproduced", [ORDER, "Runs : 2 of 3."])).status, 0);
+});
+
+test("a verdict without an allowed token lists the allowed tokens", () => {
+	const line = reference.split(/\r?\n/).find((text) => text.startsWith("The outcome tokens are"));
+	const tokens = [...line.matchAll(/`([^`]+)`/g)].map((match) => match[1]);
+	assert.ok(tokens.length >= 12, "reference lists the outcome tokens");
+	const problems = check(verdict("Verified existing fix", [ORDER, "Runs: 2 of 2"])).problems;
+	const listed = problems.match(/Verdict lacks an allowed token, one of (.*)/)[1].trim().split(", ");
+	assert.deepEqual(listed.sort(), [...tokens].sort());
+	assert.equal(check(verdict(tokens[0], [ORDER, "Runs: 2 of 2"])).status, 0);
 });
 
 test("the verdict carries a label and the H1 comes first", () => {
@@ -219,6 +252,31 @@ test("evidence accepts existing files with long extensions and line suffixes", (
 	const cites = "- `trace.heapsnapshot`\n- `shot.png:12`";
 	assert.equal(check(verdict("Blocked", [], cites), ["trace.heapsnapshot", "shot.png"]).status, 0);
 	assert.match(check(verdict("Blocked", [], "- `shot.png:12`"), []).problems, /evidence path not found: shot\.png:12/);
+});
+
+test("an empty token is not a citation", () => {
+	for (const token of [" ", ":12"]) {
+		assert.match(check(verdict("Blocked", [], `- \`${token}\``)).problems, /cites no backticked path or URL/, JSON.stringify(token));
+	}
+	assert.equal(check(verdict("Blocked", [], "- `shot.png:12`"), ["shot.png"]).status, 0);
+});
+
+test("a missing evidence file is reported as missing, not as an uncited section", () => {
+	const evidence = "- `captures/run-1.png`";
+	const { problems } = check(verdict("Blocked", [], evidence), []);
+	assert.match(problems, /evidence path not found: captures\/run-1\.png/);
+	assert.doesNotMatch(problems, /cites no backticked path or URL/);
+	assert.equal(check(verdict("Blocked", [], evidence)).status, 0);
+});
+
+test("an evidence path may hold a space, and a command without a path is not a citation", () => {
+	const evidence = "- `captures/run 1.webm`";
+	const runs = [ORDER, "Runs: 2 of 2"];
+	assert.equal(check(verdict("Reproduced", runs, evidence), ["captures/run 1.webm"]).status, 0);
+	const { problems } = check(verdict("Reproduced", runs, evidence), []);
+	assert.match(problems, /evidence path not found: captures\/run 1\.webm/);
+	assert.doesNotMatch(problems, /cites no backticked path or URL/);
+	assert.match(check(verdict("Blocked", [], "- ran `npm run e2e`")).problems, /cites no backticked path or URL/);
 });
 
 test("Pass-to-fail takes none or check names, not a placeholder", () => {

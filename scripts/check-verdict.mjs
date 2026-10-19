@@ -200,9 +200,9 @@ function readFields(section, labels) {
 	);
 	const fields = {};
 	for (const line of proseLines(section)) {
-		const match = line.text.match(/^\s*(?:[-*]\s+)?([A-Za-z -]+?)\s*:\s*(.*)$/);
-		const key = match && keyByLabel[match[1].replace(/\s+/g, " ").toLowerCase()];
-		const value = match?.[2].trim();
+		const match = line.text.match(/^\s*(?:[-*]\s+)?(\*\*|__)?([A-Za-z -]+?)\s*(?:\1\s*:|:\s*\1)\s*(.*)$/);
+		const key = match && keyByLabel[match[2].replace(/\s+/g, " ").toLowerCase()];
+		const value = match?.[3].trim();
 		if (!key || !value) continue;
 		if (fields[key]) fail(line.n, `${labels[key]} appears more than once`);
 		else fields[key] = { value, n: line.n };
@@ -235,7 +235,7 @@ function readRunRecord(section) {
 	for (const key of COUNT_FIELDS) {
 		const field = record[key];
 		if (!field) continue;
-		delete record[key];
+		record[key] = null;
 		const count = field.value.match(COUNT);
 		if (!count) {
 			fail(field.n, `${RUN_FIELDS[key]} must start with "K of N"`);
@@ -252,12 +252,12 @@ function readRunRecord(section) {
 function checkRunRecord(section, verdict, record) {
 	const rule = RUN_RULES[verdict];
 	const needs = ["surface", "environment", ...(rule?.needs ?? [])];
-	const missing = needs.filter((key) => !record[key]);
+	const missing = needs.filter((key) => record[key] === undefined);
 	for (const key of missing) fail(section.n, `Surface and runs lacks "${RUN_FIELDS[key]}:"`);
 	if (record.surface && !SURFACE.test(record.surface.value)) {
 		fail(record.surface.n, "Surface names no UI, CLI, API, browser, desktop, mobile, harness, or trace");
 	}
-	if (!rule || missing.length) return;
+	if (!rule || needs.some((key) => !record[key])) return;
 	for (const key of COUNT_FIELDS) {
 		if (rule.needs.includes(key) && record[key].total < 2) {
 			fail(record[key].n, `${RUN_FIELDS[key]} needs at least 2 runs`);
@@ -279,14 +279,16 @@ function checkEvidence(section, verdict, timing) {
 				recorded ||= countsAsRecording(token.replace(/[?#].*$/, ""));
 				continue;
 			}
-			if (/\s/.test(token)) continue;
 			const candidate = token.replace(LINE_SUFFIX, "");
+			if (!candidate) continue;
 			const target = path.resolve(base, candidate);
-			if (!fs.existsSync(target)) {
-				if (PATH_TOKEN.test(candidate)) fail(line.n, `evidence path not found: ${token}`);
+			const exists = fs.existsSync(target);
+			if (!exists && !PATH_TOKEN.test(candidate)) continue;
+			cited++;
+			if (!exists) {
+				fail(line.n, `evidence path not found: ${token}`);
 				continue;
 			}
-			cited++;
 			const stat = fs.statSync(target);
 			if (stat.isFile() && stat.size === 0) fail(line.n, `evidence file is empty: ${token}`);
 			else recorded ||= countsAsRecording(candidate);
@@ -317,7 +319,7 @@ for (const title of REQUIRED_SECTIONS) {
 	const text = bodyText(section);
 	if (title === "Verdict") {
 		verdict = matchVerdict(text);
-		if (!verdict) fail(section.n, "Verdict lacks an allowed token");
+		if (!verdict) fail(section.n, `Verdict lacks an allowed token, one of ${ALLOWED_VERDICTS.join(", ")}`);
 		if (!LABEL.test(text)) fail(section.n, "Verdict lacks a measured, inferred, or guess label");
 		checkVerdictLines(section, verdict);
 	} else if (title === "Expected and broken state") {
