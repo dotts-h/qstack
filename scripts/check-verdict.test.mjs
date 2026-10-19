@@ -354,3 +354,32 @@ test("prose rejects long dashes", () => {
 test("the checker exits 2 without a file", () => {
 	assert.equal(spawnSync(process.execPath, [checker]).status, 2);
 });
+
+test("an unreadable verdict path exits 2 with one line that names it", () => {
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), "qstack-verdict-"));
+	try {
+		for (const target of [path.join(root, "missing.md"), root]) {
+			const result = spawnSync(process.execPath, [checker, target], { encoding: "utf8" });
+			assert.equal(result.status, 2, target);
+			assert.equal(result.stderr.trim().split("\n").length, 1, result.stderr);
+			assert.ok(result.stderr.startsWith(`${target}: `), result.stderr);
+		}
+	} finally {
+		fs.rmSync(root, { recursive: true, force: true });
+	}
+});
+
+test("a UTF-16 verdict is one problem that names the encoding", () => {
+	const text = verdict("Blocked", []);
+	const encodings = [
+		["UTF-16LE", Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(text, "utf16le")])],
+		["UTF-16BE", Buffer.concat([Buffer.from([0xfe, 0xff]), Buffer.from(text, "utf16le").swap16()])],
+	];
+	for (const [encoding, bytes] of encodings) {
+		const { status, problems } = check(bytes, []);
+		assert.equal(status, 1, encoding);
+		assert.match(problems, new RegExp(`the file is ${encoding}\\. Save it as UTF-8`));
+		assert.equal(problems.trim().split("\n").length, 1, problems);
+	}
+	assert.equal(check(text).status, 0);
+});

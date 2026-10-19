@@ -2,6 +2,8 @@
 
 A verdict file records one QA outcome with the runs and artifacts behind it. `scripts/check-verdict.mjs` enforces this format. Run `node scripts/check-verdict.mjs <verdict.md>` from the plugin root. It prints one summary line, then one line for each problem. Fix the problems and run it again until the summary line ends in `problems=0`.
 
+Write the file as UTF-8. Windows PowerShell 5.1 writes UTF-16 with `>` and `Out-File`, and the checker rejects UTF-16.
+
 ## Sections
 
 Start with an H1 title. Then write these sections in this order:

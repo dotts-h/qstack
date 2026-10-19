@@ -130,9 +130,27 @@ if (!file) {
 	process.exit(2);
 }
 
-const raw = fs.readFileSync(file, "utf8").replace(/^\uFEFF/, "").split(/\r?\n/);
 const problems = [];
 const fail = (line, message) => problems.push(`${file}:${line}: ${message}`);
+function report(token) {
+	console.log(`${file}: verdict=${token} problems=${problems.length}`);
+	for (const problem of problems) console.error(problem);
+	process.exit(problems.length > 0 ? 1 : 0);
+}
+
+let bytes;
+try {
+	bytes = fs.readFileSync(file);
+} catch (error) {
+	console.error(`${file}: ${error.message}`);
+	process.exit(2);
+}
+const utf16 = { fffe: "UTF-16LE", feff: "UTF-16BE" }[bytes.subarray(0, 2).toString("hex")];
+if (utf16) {
+	fail(1, `the file is ${utf16}. Save it as UTF-8`);
+	report("missing");
+}
+const raw = bytes.toString("utf8").replace(/^\uFEFF/, "").split(/\r?\n/);
 
 let start = 0;
 if (raw[0] === "---") start = raw.indexOf("---", 1) + 1;
@@ -338,7 +356,4 @@ for (const title of REQUIRED_SECTIONS) {
 	}
 }
 
-const token = verdict ?? "missing";
-console.log(`${file}: verdict=${token} problems=${problems.length}`);
-for (const problem of problems) console.error(problem);
-process.exit(problems.length > 0 ? 1 : 0);
+report(verdict ?? "missing");
