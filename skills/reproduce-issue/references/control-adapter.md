@@ -4,7 +4,7 @@ The reproduce-issue skill does not know how to start or drive every app. The use
 
 Set its skill name in `control.skill_name`, in the settings file that [`settings.md`](../../qstack-mode/references/settings.md) describes.
 
-Set the completed user-facing feature map path in `control.feature_map_path`. Copy and fill [`feature-map.example.md`](./feature-map.example.md) outside this skill directory, for example to `.cursor/qstack/feature-map.md`, instead of editing the example.
+Set the completed user-facing feature map path in `control.feature_map_path`. When the control skill is a verification skill that [`create-verification-skill`](../../create-verification-skill/SKILL.md) generated, use its `.cursor/skills/verify-<app>/features/README.md`, and read each feature file it links as a map section. Otherwise copy and fill [`feature-map.example.md`](./feature-map.example.md) outside this skill directory, for example to `.cursor/qstack/feature-map.md`, instead of editing the example.
 
 If the settings file, the skill, the feature map, or a required capability is absent, ambiguous, or incomplete, reproduction must fail closed.
 

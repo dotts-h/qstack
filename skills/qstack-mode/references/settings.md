@@ -7,7 +7,7 @@ qstack reads project settings from `.cursor/qstack/settings.json` in the workspa
 | Key | Read by | Meaning |
 |---|---|---|
 | `control.skill_name` | reproduce-issue | Required. The skill that implements [the control-adapter contract](../../reproduce-issue/references/control-adapter.md) |
-| `control.feature_map_path` | reproduce-issue | Required. The completed copy of [the feature-map example](../../reproduce-issue/references/feature-map.example.md) |
+| `control.feature_map_path` | reproduce-issue | Required. The feature map that [the control-adapter contract](../../reproduce-issue/references/control-adapter.md) describes |
 | `control.artifact_directory` | reproduce-issue | Where captures go. It must sit outside the repository. Without it, use a `qstack` folder in the operating system's temporary directory |
 | `control.artifact_retention_hours` | reproduce-issue | How long cleanup keeps captures. Without it, cleanup deletes no capture |
 | `routing.map_path` | triage-defect | Optional. The completed copy of [the routing example](../../triage-defect/references/routing.example.md) |
