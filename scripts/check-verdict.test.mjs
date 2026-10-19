@@ -45,8 +45,8 @@ function check(markdown, artifacts = cited(markdown), content = "x") {
 		fs.mkdirSync(dir);
 		for (const artifact of artifacts) {
 			const target = path.join(dir, artifact);
-			fs.mkdirSync(path.dirname(target), { recursive: true });
-			fs.writeFileSync(target, content);
+			fs.mkdirSync(artifact.endsWith("/") ? target : path.dirname(target), { recursive: true });
+			if (!artifact.endsWith("/")) fs.writeFileSync(target, content);
 		}
 		const file = path.join(dir, "verdict.md");
 		fs.writeFileSync(file, markdown);
@@ -114,7 +114,7 @@ test("a reproduction or a fix verdict needs a recording", () => {
 		check(verdict("Reproduced", runs, "- `captures/run-1.png`")).problems,
 		/Reproduced needs a recording in Evidence/,
 	);
-	for (const recording of ["captures/run-1.webm", "captures/run-1.trace", "captures/run-1-trace.zip"]) {
+	for (const recording of ["captures/run-1.webm", "captures/run-1-trace.zip"]) {
 		assert.equal(check(verdict("Reproduced", runs, `- \`${recording}\``)).status, 0, recording);
 	}
 	assert.equal(check(verdict("Reproduced", runs, "- `https://ci.example/run/7/video.mp4?raw=1`")).status, 0);
@@ -124,6 +124,22 @@ test("a reproduction or a fix verdict needs a recording", () => {
 		check(verdict("Confirmed", fix, "- `captures/patched-run-2.png`")).problems,
 		/Confirmed needs a recording in Evidence/,
 	);
+});
+
+test("a .trace file counts as a recording only beside its screencast frames", () => {
+	const runs = [ORDER, "Runs: 2 of 2"];
+	const evidence = "- `traces/trace-1.trace`";
+	const trace = (artifacts) => check(verdict("Reproduced", runs, evidence), artifacts);
+	assert.equal(trace(["traces/trace-1.trace", "traces/screencast/page-1.jpeg"]).status, 0);
+	for (const artifacts of [["traces/trace-1.trace"], ["traces/trace-1.trace", "traces/screencast/"]]) {
+		const { problems } = trace(artifacts);
+		assert.match(problems, /a \.trace file counts only with its screencast folder beside it: traces\/trace-1\.trace/, artifacts.join(", "));
+		assert.match(problems, /Reproduced needs a recording in Evidence/);
+	}
+	const remote = check(verdict("Reproduced", runs, "- `https://ci.example/run/7/trace-1.trace`")).problems;
+	assert.match(remote, /a \.trace file counts only with its screencast folder beside it/);
+	const withVideo = "- `traces/trace-1.trace`\n- `captures/run-1.webm`";
+	assert.equal(check(verdict("Reproduced", runs, withVideo), ["traces/trace-1.trace", "captures/run-1.webm"]).status, 0);
 });
 
 test("a timing verdict may cite timing data instead of a recording", () => {

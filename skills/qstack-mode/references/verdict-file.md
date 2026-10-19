@@ -61,7 +61,7 @@ An intermittent bug needs more clean patched runs, because a fix with no effect 
 
 Backticks in `## Evidence` mark artifacts. Cite each artifact as a URL, an absolute path, or a path relative to the verdict file. A path may end in a line suffix such as `:12`. Every backticked token that names a file must exist and must not be empty when the checker runs, so run the checker before cleanup. A token with a slash or a file extension counts as a file name, so keep code names such as method calls out of backticks in this section.
 
-`Reproduced`, `Confirmed`, and `Insufficient fix` also need a recording. A recording is a video ending in `.webm`, `.mp4`, `.mov`, or `.mkv`. A trace also counts, as a `.trace` file or a `.zip` file with `trace` in its name. Screenshots alone do not count.
+`Reproduced`, `Confirmed`, and `Insufficient fix` also need a recording. A recording is a video ending in `.webm`, `.mp4`, `.mov`, or `.mkv`. A trace also counts, as a `.zip` file with `trace` in its name, or as a local `.trace` file with a non-empty `screencast` folder beside it. A `playwright-cli` trace keeps its frames in that folder, so keep the folder with the `.trace` file. Screenshots alone do not count.
 
 A timing verdict may cite timing data instead of a recording. Timing data is a `.json`, `.jsonl`, `.csv`, `.sqlite`, `.db`, or `.cpuprofile` file exported from its runs. Without `Timing:`, a data file does not count.
 

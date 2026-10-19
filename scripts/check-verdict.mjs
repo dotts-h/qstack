@@ -47,7 +47,8 @@ const COMMIT_SHA = /^[0-9a-f]{7,40}(?![0-9a-z])/i;
 const PATH_TOKEN = /[\\/]|\.[A-Za-z][A-Za-z0-9]*$/;
 const LINE_SUFFIX = /:\d+(?::\d+)?$/;
 const LABEL = /\b(measured|inferred|guess)\b/i;
-const RECORDING = /\.(webm|mp4|mov|mkv|trace)$|trace[^\\/]*\.zip$/i;
+const RECORDING = /\.(webm|mp4|mov|mkv)$|trace[^\\/]*\.zip$/i;
+const TRACE = /\.trace$/i;
 const TIMING_DATA = /\.(json|jsonl|csv|sqlite|db|cpuprofile)$/i;
 const NEEDS_RECORDING = ["Reproduced", "Confirmed", "Insufficient fix"];
 const LUCKY_PASS_RISK = 0.05;
@@ -286,17 +287,25 @@ function checkRunRecord(section, verdict, record) {
 	for (const message of rule.check(record).filter(Boolean)) fail(section.n, message);
 }
 
+function hasFrames(trace) {
+	const frames = path.join(path.dirname(trace), "screencast");
+	return fs.existsSync(frames) && fs.statSync(frames).isDirectory() && fs.readdirSync(frames).length > 0;
+}
+
 function checkEvidence(section, verdict, timing) {
 	const base = path.dirname(path.resolve(file));
 	const countsAsRecording = (name) => RECORDING.test(name) || (timing && TIMING_DATA.test(name));
 	let cited = 0;
 	let recorded = false;
+	let frameless = null;
 	for (const line of proseLines(section)) {
 		for (const match of line.text.matchAll(/`([^`]+)`/g)) {
 			const token = match[1].trim();
 			if (URL_TOKEN.test(token)) {
 				cited++;
-				recorded ||= countsAsRecording(token.replace(/[?#].*$/, ""));
+				const name = token.replace(/[?#].*$/, "");
+				recorded ||= countsAsRecording(name);
+				if (TRACE.test(name)) frameless ??= { token, n: line.n };
 				continue;
 			}
 			const candidate = token.replace(LINE_SUFFIX, "");
@@ -311,11 +320,13 @@ function checkEvidence(section, verdict, timing) {
 			}
 			const stat = fs.statSync(target);
 			if (stat.isFile() && stat.size === 0) fail(line.n, `evidence file is empty: ${token}`);
-			else recorded ||= countsAsRecording(candidate);
+			else if (TRACE.test(candidate) && !hasFrames(target)) frameless ??= { token, n: line.n };
+			else recorded ||= countsAsRecording(candidate) || TRACE.test(candidate);
 		}
 	}
 	if (!cited) fail(section.n, "Evidence cites no backticked path or URL");
 	if (NEEDS_RECORDING.includes(verdict) && !recorded) {
+		if (frameless) fail(frameless.n, `a .trace file counts only with its screencast folder beside it: ${frameless.token}`);
 		const needed = timing ? "a recording or timing data in Evidence" : "a recording in Evidence, a video or a trace";
 		fail(section.n, `${verdict} needs ${needed}`);
 	}
