@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Explain the number
 
-- **Ask "why not double?"** Name the resource or code path that bounds the result. A core, a lock, the disk, the network, or the load generator itself can be that bound. Get the limiter from a profile or from system counters taken during a run, then map it to source. A guess from reading the code is not a limiter. If you cannot say why the number is not twice as good, you do not know what you measured.
+- **Ask "why not double?"** Name the resource or code path that bounds the result. A core, a lock, the disk, the network, or the load generator itself can be that bound. Get the limiter from a profile or from system counters taken during a run, then map it to source. When you cannot read the source, name the limiter as the counters show it, such as one long task or one slow request, and say that what runs inside it is unknown. A guess from reading the code is not a limiter. If you cannot say why the number is not twice as good, you do not know what you measured.
 - **List what else the number could be measuring, and rule out each one with evidence.** The usual suspects include errors, skipped or cached work, and code that never ran. They also include an untuned side left on default settings, noise, and a piece too small to matter end to end.
 - **Keep the evidence with the number.** Put the run count, the spread, and the limiter in the notes or a linked artifact.
 

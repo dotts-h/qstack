@@ -34,7 +34,7 @@ There are seven specialist playbooks.
 - [Characterization pin](skills/qstack-mode/playbooks/characterization-pin.md) records current behavior before structure moves.
 - [Regression lane](skills/qstack-mode/playbooks/regression-lane.md) runs one load-bearing scenario on trunk and on head.
 - [Flake triage](skills/qstack-mode/playbooks/flake-triage.md) classifies a red CI check before any retrigger.
-- [Perf gate](skills/qstack-mode/playbooks/perf-gate.md) compares a baseline with the measurement after the change.
+- [Perf gate](skills/qstack-mode/playbooks/perf-gate.md) compares a baseline with the measurement after a change, or on another account or configuration.
 
 ## Skills
 
@@ -76,8 +76,9 @@ These files are the host tools.
 - `scripts/log.mjs` appends one phase decision to a log file.
 - `scripts/check-verdict.mjs` checks a written verdict file against `skills/qstack-mode/references/verdict-file.md`.
 - `scripts/check-settings.mjs` checks a project settings file against `skills/qstack-mode/references/settings.md`.
+- `scripts/check-markdown.mjs` checks every markdown file in the plugin for skill frontmatter, links, anchors, cited paths, long dashes, and curly quotes.
 
-Run `node --test` from the plugin root to test both checkers.
+Run `node --test` from the plugin root to test the checkers and to run the markdown check over the plugin.
 
 ## Load it locally
 
@@ -119,4 +120,4 @@ Cursor discovers a component from its default folder when `.cursor-plugin/plugin
 | Hooks | `hooks/hooks.json` |
 | MCP servers | `mcp.json` |
 
-A skill directory contains `SKILL.md`. The frontmatter needs `name` and `description`.
+Each skill lives in `skills/<name>/SKILL.md`. Its frontmatter needs `name` and `description`.

@@ -13,9 +13,13 @@ Cite each principle that shaped a decision and the specific choice it changed. C
 
 Read-only on product code by default. A QA run observes, reproduces, measures, and grades the system under test. It never patches product source code or merges pull requests unless the operator explicitly asks for a test harness file under `.cursor/skills/verify-*/` or a test directory.
 
+Open no window on the user's desktop. Run browsers headless, start no process that opens a window, such as through `Start-Process`, and open no viewer for a video, a trace, or a report.
+
 Unfamiliar subsystem or "how does X work?" routes to `../how/SKILL.md`.
 
 Regression history or "why is X shaped this way?" routes to `../why/SKILL.md`.
+
+A black-box run has no access to the product's source. Runs against a public site or a vendor app are black-box runs, and so is a run whose rules forbid reading the source. Such a run skips every step that needs the source, such as the `how` and `why` traces, a CPU profile, and naming the files that own a result. Mark each skipped step `skip: black-box run`.
 
 Before designing test cases or exploring, restate the testing mission via `../in-your-own-words/SKILL.md`.
 
@@ -61,6 +65,8 @@ Reversible checks, local test builds, read-only queries, and screenshots proceed
 
 Use `subagent_type: "qstack-agent"` (or `generalPurpose` with this file's path when `qstack-agent` is not yet registered in the host session) for background verification delegates. Respect `how` and `why` subagent rules and `~/.cursor/rules/qstack-models.mdc` role overrides configured via `../setup-qstack/SKILL.md`.
 
+When a delegate reports that it could not spawn the read-only reviewer that `../reproduce-issue/SKILL.md` asks for, run that reviewer before you accept its verdict.
+
 ## Writing the reply
 
 Short declarative sentences. No long dashes. No mid-sentence colons. Frame impact for the consumer (the user or QA reviewer) and the maintainer (the engineer receiving the verdict or defect report). Every claim carries its evidence or its label (`measured`, `inferred`, or `guess`) in the same sentence.
@@ -82,8 +88,8 @@ Open a todolist whose first items are the matched playbook's steps copied verbat
 
 - **Diagnose live.** `playbooks/diagnose-live.md`. A live CPU, heap, or CDP symptom.
 - **Diagnose trace.** `playbooks/diagnose-trace.md`. A captured cpuprofile, trace, or heapsnapshot.
-- **Visual parity.** `playbooks/visual-parity.md`. Screenshot comparison against a baseline, with a person judging each change.
+- **Visual parity.** `playbooks/visual-parity.md`. Screenshot comparison against a baseline revision, account, or environment, with a person judging each visual change.
 - **Characterization pin.** `playbooks/characterization-pin.md`. A snapshot of current behavior before structure moves.
 - **Regression lane.** `playbooks/regression-lane.md`. One load-bearing scenario on trunk and head.
 - **Flake triage.** `playbooks/flake-triage.md`. A red CI check to classify before any retrigger.
-- **Perf gate.** `playbooks/perf-gate.md`. A baseline and post-change measurement.
+- **Perf gate.** `playbooks/perf-gate.md`. A baseline measured against a change, an account, or a configuration.

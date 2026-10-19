@@ -23,6 +23,10 @@ const REQUIRED_SECTIONS = [
 	"Surface and runs",
 	"Evidence",
 ];
+const VERDICT_FIELDS = {
+	fixArtifact: "Fix artifact",
+	missing: "Missing",
+};
 const RUN_FIELDS = {
 	surface: "Surface",
 	environment: "Environment",
@@ -31,10 +35,8 @@ const RUN_FIELDS = {
 	baseline: "Baseline runs",
 	patched: "Patched runs",
 	passToFail: "Pass-to-fail",
+	timing: "Timing",
 };
-const FIELD_BY_LABEL = Object.fromEntries(
-	Object.entries(RUN_FIELDS).map(([key, label]) => [label.toLowerCase(), key]),
-);
 const COUNT_FIELDS = ["runs", "baseline", "patched"];
 const SURFACE = /\b(UI|CLI|API|browser|desktop|mobile|harness|trace)\b/i;
 const COUNT = /^(\d+)\s+of\s+(\d+)(?!\.?\d)/i;
@@ -45,6 +47,7 @@ const PATH_TOKEN = /[\\/]|\.[A-Za-z][A-Za-z0-9]*$/;
 const LINE_SUFFIX = /:\d+(?::\d+)?$/;
 const LABEL = /\b(measured|inferred|guess)\b/i;
 const RECORDING = /\.(webm|mp4|mov|mkv|trace)$|trace[^\\/]*\.zip$/i;
+const TIMING_DATA = /\.(json|jsonl|csv|sqlite|db|cpuprofile)$/i;
 const NEEDS_RECORDING = ["Reproduced", "Confirmed", "Insufficient fix"];
 const LUCKY_PASS_RISK = 0.05;
 
@@ -103,6 +106,22 @@ const RUN_RULES = {
 	Pass: passing,
 	FAIL: failing,
 	Fail: failing,
+};
+
+const presenceOnly = () => [];
+const linksFix = ({ fixArtifact }) => [
+	!URL_TOKEN.test(fixArtifact.value) && 'a fix verdict needs a URL in "Fix artifact:"',
+];
+const REPRODUCE_RULES = {
+	Reproduced: presenceOnly,
+	"Could not reproduce": presenceOnly,
+	Blocked: ({ missing }) => [
+		(NONE.test(missing.value) || PLACEHOLDER.test(missing.value)) &&
+			'Blocked needs "Missing:" to name what was missing',
+	],
+	Confirmed: linksFix,
+	"Insufficient fix": linksFix,
+	Inconclusive: presenceOnly,
 };
 
 const file = process.argv[2];
@@ -175,41 +194,62 @@ function matchVerdict(text) {
 	return best ? best.token : null;
 }
 
-function readRunRecord(section) {
-	const record = {};
-	const seen = new Set();
+function readFields(section, labels) {
+	const keyByLabel = Object.fromEntries(
+		Object.entries(labels).map(([key, label]) => [label.toLowerCase(), key]),
+	);
+	const fields = {};
 	for (const line of proseLines(section)) {
 		const match = line.text.match(/^\s*(?:[-*]\s+)?([A-Za-z -]+?)\s*:\s*(.*)$/);
-		const key = match && FIELD_BY_LABEL[match[1].replace(/\s+/g, " ").toLowerCase()];
+		const key = match && keyByLabel[match[1].replace(/\s+/g, " ").toLowerCase()];
 		const value = match?.[2].trim();
 		if (!key || !value) continue;
-		if (seen.has(key)) {
-			fail(line.n, `${RUN_FIELDS[key]} appears more than once`);
-			continue;
-		}
-		seen.add(key);
-		if (key === "passToFail" && PLACEHOLDER.test(value)) {
-			fail(line.n, 'Pass-to-fail: write "none" or name the checks');
-		}
-		if (!COUNT_FIELDS.includes(key)) {
-			record[key] = { value, n: line.n };
-			continue;
-		}
-		const count = value.match(COUNT);
+		if (fields[key]) fail(line.n, `${labels[key]} appears more than once`);
+		else fields[key] = { value, n: line.n };
+	}
+	return fields;
+}
+
+function checkVerdictLines(section, verdict) {
+	const rule = REPRODUCE_RULES[verdict];
+	if (!rule) return;
+	const fields = readFields(section, VERDICT_FIELDS);
+	const absent = Object.keys(VERDICT_FIELDS).filter((key) => !fields[key]);
+	for (const key of absent) fail(section.n, `Verdict lacks "${VERDICT_FIELDS[key]}:"`);
+	if (absent.length) return;
+	if (!URL_TOKEN.test(fields.fixArtifact.value) && !NONE.test(fields.fixArtifact.value)) {
+		fail(fields.fixArtifact.n, 'Fix artifact: write a URL or "none"');
+	}
+	for (const message of rule(fields).filter(Boolean)) fail(section.n, message);
+}
+
+function readRunRecord(section) {
+	const record = readFields(section, RUN_FIELDS);
+	if (record.passToFail && PLACEHOLDER.test(record.passToFail.value)) {
+		fail(record.passToFail.n, 'Pass-to-fail: write "none" or name the checks');
+	}
+	if (record.timing && (NONE.test(record.timing.value) || PLACEHOLDER.test(record.timing.value))) {
+		fail(record.timing.n, "Timing: name the clock that timed each run, or leave the line out");
+		delete record.timing;
+	}
+	for (const key of COUNT_FIELDS) {
+		const field = record[key];
+		if (!field) continue;
+		delete record[key];
+		const count = field.value.match(COUNT);
 		if (!count) {
-			fail(line.n, `${RUN_FIELDS[key]} must start with "K of N"`);
+			fail(field.n, `${RUN_FIELDS[key]} must start with "K of N"`);
 			continue;
 		}
 		const failed = Number(count[1]);
 		const total = Number(count[2]);
-		if (failed > total) fail(line.n, `${RUN_FIELDS[key]} counts more failing runs than runs`);
-		else record[key] = { failed, total, n: line.n };
+		if (failed > total) fail(field.n, `${RUN_FIELDS[key]} counts more failing runs than runs`);
+		else record[key] = { failed, total, n: field.n };
 	}
 	return record;
 }
 
-function checkRunRecord(section, verdict) {
-	const record = readRunRecord(section);
+function checkRunRecord(section, verdict, record) {
 	const rule = RUN_RULES[verdict];
 	const needs = ["surface", "environment", ...(rule?.needs ?? [])];
 	const missing = needs.filter((key) => !record[key]);
@@ -226,8 +266,9 @@ function checkRunRecord(section, verdict) {
 	for (const message of rule.check(record).filter(Boolean)) fail(section.n, message);
 }
 
-function checkEvidence(section, verdict) {
+function checkEvidence(section, verdict, timing) {
 	const base = path.dirname(path.resolve(file));
+	const countsAsRecording = (name) => RECORDING.test(name) || (timing && TIMING_DATA.test(name));
 	let cited = 0;
 	let recorded = false;
 	for (const line of proseLines(section)) {
@@ -235,7 +276,7 @@ function checkEvidence(section, verdict) {
 			const token = match[1].trim();
 			if (URL_TOKEN.test(token)) {
 				cited++;
-				recorded ||= RECORDING.test(token.replace(/[?#].*$/, ""));
+				recorded ||= countsAsRecording(token.replace(/[?#].*$/, ""));
 				continue;
 			}
 			if (/\s/.test(token)) continue;
@@ -248,12 +289,13 @@ function checkEvidence(section, verdict) {
 			cited++;
 			const stat = fs.statSync(target);
 			if (stat.isFile() && stat.size === 0) fail(line.n, `evidence file is empty: ${token}`);
-			else recorded ||= RECORDING.test(candidate);
+			else recorded ||= countsAsRecording(candidate);
 		}
 	}
 	if (!cited) fail(section.n, "Evidence cites no backticked path or URL");
 	if (NEEDS_RECORDING.includes(verdict) && !recorded) {
-		fail(section.n, `${verdict} needs a recording in Evidence, a video or a trace`);
+		const needed = timing ? "a recording or timing data in Evidence" : "a recording in Evidence, a video or a trace";
+		fail(section.n, `${verdict} needs ${needed}`);
 	}
 }
 
@@ -262,6 +304,7 @@ if (!h1) fail(1, "no H1 title");
 else if (sections.length && h1.n > sections[0].n) fail(h1.n, "H1 title comes after the first section");
 
 let verdict = null;
+let record = {};
 let previous = 0;
 for (const title of REQUIRED_SECTIONS) {
 	const section = sections.find((item) => item.title === title);
@@ -276,6 +319,7 @@ for (const title of REQUIRED_SECTIONS) {
 		verdict = matchVerdict(text);
 		if (!verdict) fail(section.n, "Verdict lacks an allowed token");
 		if (!LABEL.test(text)) fail(section.n, "Verdict lacks a measured, inferred, or guess label");
+		checkVerdictLines(section, verdict);
 	} else if (title === "Expected and broken state") {
 		if (!text.trim()) fail(section.n, "Expected and broken state is empty");
 		else {
@@ -285,9 +329,10 @@ for (const title of REQUIRED_SECTIONS) {
 			}
 		}
 	} else if (title === "Surface and runs") {
-		checkRunRecord(section, verdict);
+		record = readRunRecord(section);
+		checkRunRecord(section, verdict, record);
 	} else if (title === "Evidence") {
-		checkEvidence(section, verdict);
+		checkEvidence(section, verdict, Boolean(record.timing));
 	}
 }
 

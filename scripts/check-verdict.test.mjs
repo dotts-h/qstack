@@ -15,7 +15,22 @@ const reference = fs.readFileSync(
 const examples = [...reference.matchAll(/^```markdown\r?\n([\s\S]*?)^```\r?$/gm)].map(
 	(match) => match[1],
 );
+const TIMING_EXTENSIONS = [
+	...reference
+		.split(/\r?\n/)
+		.find((line) => line.includes("Timing data is"))
+		.matchAll(/`\.(\w+)`/g),
+].map((match) => match[1]);
+const fixtures = path.join(here, "fixtures", "timing");
 const ORDER = "Order: fresh browser profile per run";
+const TIMING = "Timing: the page's performance timeline";
+const FIX_URL = "https://github.com/acme/app/pull/123";
+const VERDICT_LINES = {
+	Blocked: ["Fix artifact: none", "Missing: a feature-map section for saved filters"],
+	Confirmed: [`Fix artifact: ${FIX_URL}`, "Missing: none"],
+	"Insufficient fix": [`Fix artifact: ${FIX_URL}`, "Missing: none"],
+};
+const verdictLines = (token) => VERDICT_LINES[token] ?? ["Fix artifact: none", "Missing: none"];
 
 function cited(markdown) {
 	return [...markdown.matchAll(/`([^`\s]+\/[^`\s]+)`/g)]
@@ -24,8 +39,10 @@ function cited(markdown) {
 }
 
 function check(markdown, artifacts = cited(markdown), content = "x") {
-	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "qstack-verdict-"));
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), "qstack-verdict-"));
+	const dir = path.join(root, "verdicts");
 	try {
+		fs.mkdirSync(dir);
 		for (const artifact of artifacts) {
 			const target = path.join(dir, artifact);
 			fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -36,17 +53,23 @@ function check(markdown, artifacts = cited(markdown), content = "x") {
 		const result = spawnSync(process.execPath, [checker, file], { encoding: "utf8" });
 		return { status: result.status, problems: result.stderr };
 	} finally {
-		fs.rmSync(dir, { recursive: true, force: true });
+		fs.rmSync(root, { recursive: true, force: true });
 	}
 }
 
-function verdict(token, runLines, evidence = "- `captures/run-1.png`\n- `captures/run-1.webm`") {
+function verdict(
+	token,
+	runLines,
+	evidence = "- `captures/run-1.png`\n- `captures/run-1.webm`",
+	verdictFields = verdictLines(token),
+) {
 	return [
 		"# Saved filter disappears after reload",
 		"",
 		"## Verdict",
 		"",
 		`${token}. Measured.`,
+		...verdictFields,
 		"",
 		"## Expected and broken state",
 		"",
@@ -101,6 +124,47 @@ test("a reproduction or a fix verdict needs a recording", () => {
 		check(verdict("Confirmed", fix, "- `captures/patched-run-2.png`")).problems,
 		/Confirmed needs a recording in Evidence/,
 	);
+});
+
+test("a timing verdict may cite timing data instead of a recording", () => {
+	assert.ok(TIMING_EXTENSIONS.length >= 3, "reference lists the timing data extensions");
+	const timed = [ORDER, "Runs: 2 of 2", TIMING];
+	for (const extension of TIMING_EXTENSIONS) {
+		const evidence = `- \`captures/run-1.png\`\n- \`perf/run-1.${extension}\``;
+		assert.equal(check(verdict("Reproduced", timed, evidence)).status, 0, extension);
+	}
+	assert.equal(check(verdict("Reproduced", timed, "- `https://ci.example/run/7/entries.json`")).status, 0);
+});
+
+test("timing data counts only with the marker, and the marker needs timing data", () => {
+	const evidence = "- `captures/run-1.png`\n- `perf/run-1.json`";
+	assert.match(
+		check(verdict("Reproduced", [ORDER, "Runs: 2 of 2"], evidence)).problems,
+		/Reproduced needs a recording in Evidence, a video or a trace/,
+	);
+	const timed = [ORDER, "Runs: 2 of 2", TIMING];
+	const screenshotOnly = check(verdict("Reproduced", timed, "- `captures/run-1.png`")).problems;
+	assert.match(screenshotOnly, /Reproduced needs a recording or timing data in Evidence/);
+	const empty = check(verdict("Reproduced", timed, evidence), undefined, "").problems;
+	assert.match(empty, /evidence file is empty: perf\/run-1\.json/);
+	assert.match(empty, /Reproduced needs a recording or timing data in Evidence/);
+	const unnamed = [ORDER, "Runs: 2 of 2", "Timing: none"];
+	const placeholder = check(verdict("Reproduced", unnamed, evidence)).problems;
+	assert.match(placeholder, /Timing: name the clock that timed each run/);
+	assert.match(placeholder, /Reproduced needs a recording in Evidence, a video or a trace/);
+});
+
+test("the timing fixtures pass with the marker and fail without it", () => {
+	const names = fs.readdirSync(fixtures);
+	assert.ok(names.length >= 2, "fixtures hold the two timing verdicts");
+	for (const name of names) {
+		const marked = fs.readFileSync(path.join(fixtures, name), "utf8");
+		const { status, problems } = check(marked);
+		assert.equal(status, 0, `${name}: ${problems}`);
+		const unmarked = marked.replace(/^Timing: .*\r?\n/m, "");
+		assert.notEqual(unmarked, marked, `${name} holds a Timing line`);
+		assert.match(check(unmarked).problems, /Reproduced needs a recording in Evidence/, name);
+	}
 });
 
 test("an empty evidence file is not evidence", () => {
@@ -195,6 +259,33 @@ test("Blocked needs a surface and an environment but no runs", () => {
 	assert.equal(check(verdict("Blocked", [])).status, 0);
 	const noEnvironment = verdict("Blocked", []).replace(/^Environment:.*\n/m, "");
 	assert.match(check(noEnvironment).problems, /lacks "Environment:"/);
+});
+
+test("a reproduce-issue verdict needs Fix artifact and Missing lines, a gate verdict does not", () => {
+	const runs = [ORDER, "Runs: 2 of 2"];
+	assert.match(check(verdict("Reproduced", runs, undefined, ["Missing: none"])).problems, /Verdict lacks "Fix artifact:"/);
+	assert.match(check(verdict("Inconclusive", [], undefined, ["Fix artifact: none"])).problems, /Verdict lacks "Missing:"/);
+	assert.equal(check(verdict("PASS", [ORDER, "Runs: 0 of 2"], undefined, [])).status, 0);
+	assert.equal(check(verdict("Unproven", [], undefined, [])).status, 0);
+});
+
+test("Fix artifact holds a URL or none, and a fix verdict holds the URL", () => {
+	const named = ["Fix artifact: PR 123", "Missing: none"];
+	assert.match(check(verdict("Reproduced", [ORDER, "Runs: 2 of 2"], undefined, named)).problems, /Fix artifact: write a URL or "none"/);
+	const unlinked = ["Fix artifact: none", "Missing: none"];
+	const confirmed = [ORDER, "Baseline runs: 2 of 2", "Patched runs: 0 of 2", "Pass-to-fail: none"];
+	assert.match(check(verdict("Confirmed", confirmed, undefined, unlinked)).problems, /a fix verdict needs a URL in "Fix artifact:"/);
+	const insufficient = [ORDER, "Baseline runs: 2 of 2", "Patched runs: 1 of 3", "Pass-to-fail: none"];
+	assert.match(check(verdict("Insufficient fix", insufficient, undefined, unlinked)).problems, /a fix verdict needs a URL/);
+});
+
+test("Blocked names what was missing, once", () => {
+	for (const missing of ["none", "n/a"]) {
+		const lines = ["Fix artifact: none", `Missing: ${missing}`];
+		assert.match(check(verdict("Blocked", [], undefined, lines)).problems, /Blocked needs "Missing:" to name what was missing/);
+	}
+	const twice = [...verdictLines("Blocked"), "Missing: a seeded account"];
+	assert.match(check(verdict("Blocked", [], undefined, twice)).problems, /Missing appears more than once/);
 });
 
 test("prose rejects long dashes", () => {

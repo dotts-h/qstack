@@ -25,7 +25,7 @@ Run the verdict text through [`../unslop/SKILL.md`](../unslop/SKILL.md) before y
 - An existing pull request or commit switches the run to verify mode. Follow [`references/verify-existing-fix.md`](references/verify-existing-fix.md). Do not edit that artifact or open another pull request.
 - No confirmed reproduction means no claim that a fix works.
 - Keep captures, recordings, logs, and tokens out of source control.
-- Use `github.com` pull request links when you cite an artifact.
+- When you cite a pull request, use its `github.com` link.
 
 ## 1. Take the report
 
@@ -80,6 +80,8 @@ Inspect screenshots and video. Use read-only workers for code history, blast rad
 
 Trace the reported action with [`../how/SKILL.md`](../how/SKILL.md). Use [`../why/SKILL.md`](../why/SKILL.md) when the report looks like a regression or touches defensive code. Form competing cause hypotheses and name the evidence that would separate them. This pass prepares the reproduction. It is not a license to patch.
 
+In a [black-box run](../qstack-mode/SKILL.md#non-negotiables), skip the code history and both traces. Form the hypotheses from the report and from what the surface shows.
+
 ## 4. Reproduce on independent runs
 
 Bring the target up through the control adapter. Confirm the app, workspace, account, data set, and feature state from stable markers before acting.
@@ -111,7 +113,11 @@ For a confirmed reproduction:
 - Save a short note with the exact steps and the observed state.
 - Keep artifacts in `control.artifact_directory`.
 
+A run whose screenshot missed the broken state can still count. The [run record](../qstack-mode/references/verdict-file.md#run-record) names the artifacts that may show it.
+
 A read-only reviewer answers one question. Does the evidence show the discriminating broken state? If the answer is no or uncertain, the reproduction is not confirmed.
+
+The reviewer is a separate subagent. A delegate that cannot spawn one says so in its reply and lists the evidence paths. Its parent then runs the reviewer before it accepts the verdict.
 
 ## 6. Verify an existing fix
 
@@ -121,7 +127,7 @@ The baseline must show the symptom on at least two runs. The patched build must 
 
 ## 7. Emit the verdict
 
-Write the verdict file in the format at [`../qstack-mode/references/verdict-file.md`](../qstack-mode/references/verdict-file.md). The outcome token is `Reproduced`, `Could not reproduce`, `Blocked`, `Confirmed`, `Insufficient fix`, or `Inconclusive`. Under `## Verdict`, add `Fix artifact: <url or none>` and `Missing: <capability or fact, or none>`. Run `node scripts/check-verdict.mjs <verdict.md>` from the plugin root and fix every line it prints.
+Write the verdict file in the format at [`../qstack-mode/references/verdict-file.md`](../qstack-mode/references/verdict-file.md), including the `Fix artifact:` and `Missing:` lines that it requires under `## Verdict`. The outcome token is `Reproduced`, `Could not reproduce`, `Blocked`, `Confirmed`, `Insufficient fix`, or `Inconclusive`. Run `node scripts/check-verdict.mjs <verdict.md>` from the plugin root until it prints `problems=0`.
 
 Interactive runs return that verdict and post nothing.
 
