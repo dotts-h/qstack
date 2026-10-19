@@ -107,6 +107,18 @@ test("retention is a positive number of hours", () => {
 	}
 });
 
+test("the recording is a video or a trace", () => {
+	for (const recording of ["video", "trace"]) assert.equal(check("reproduce", adapter({ recording })).status, 0, recording);
+	for (const recording of ["mp4", "Video", 7, ""]) {
+		assert.match(
+			check("reproduce", adapter({ recording })).problems,
+			/control\.recording must be "video" or "trace"/,
+			String(recording),
+		);
+	}
+	assert.equal(check("triage", adapter({ recording: "mp4" })).status, 0);
+});
+
 test("triage needs no key but checks a routing map it is given", () => {
 	assert.equal(check("triage", {}).status, 0);
 	assert.match(

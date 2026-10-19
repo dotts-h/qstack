@@ -6,7 +6,7 @@ import process from "node:process";
 const READS = {
 	reproduce: {
 		required: ["control.skill_name", "control.feature_map_path"],
-		optional: ["control.artifact_directory", "control.artifact_retention_hours", "slack.operations_channel_id"],
+		optional: ["control.artifact_directory", "control.artifact_retention_hours", "control.recording", "slack.operations_channel_id"],
 	},
 	triage: {
 		required: [],
@@ -18,6 +18,7 @@ const KIND = {
 	"control.feature_map_path": "file",
 	"control.artifact_directory": "outside",
 	"control.artifact_retention_hours": "hours",
+	"control.recording": "recording",
 	"routing.map_path": "file",
 	"tracker.adapter_skill_name": "name",
 	"slack.operations_channel_id": "name",
@@ -77,6 +78,10 @@ function checkValue(key, value, root) {
 		if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
 			fail(`${key} must be a positive number of hours`);
 		}
+		return;
+	}
+	if (KIND[key] === "recording") {
+		if (value !== "video" && value !== "trace") fail(`${key} must be "video" or "trace"`);
 		return;
 	}
 	if (typeof value !== "string" || !value.trim()) return fail(`${key} must be a non-empty string`);

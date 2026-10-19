@@ -48,7 +48,7 @@ Mark states that do not apply.
 #### Evidence and cross-check
 
 - Screenshot: `<app identity, feature, and discriminating state>`
-- Video: `<entry path, interaction, and final state>`
+- Recording: `<entry path, interaction, and final state>`
 - Cross-check: `<read-only state or value that confirms the UI>`
 
 #### Gotchas
@@ -200,6 +200,6 @@ Lets a user change personal preferences.
 - No selector uses generated classes or DOM position.
 - Relevant interaction, loading, empty, error, selected, and expanded states are covered.
 - Auth, fixtures, permissions, flags, and services are explicit.
-- Screenshot, video, and underlying cross-check requirements are explicit.
+- Screenshot, recording, and underlying cross-check requirements are explicit.
 - Wrong surfaces, dead ends, and safe environment translations are listed.
 - Implementation details remain runtime discoveries.

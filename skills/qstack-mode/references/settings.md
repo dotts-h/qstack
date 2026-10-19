@@ -10,6 +10,7 @@ qstack reads project settings from `.cursor/qstack/settings.json` in the workspa
 | `control.feature_map_path` | reproduce-issue | Required. The feature map that [the control-adapter contract](../../reproduce-issue/references/control-adapter.md) describes |
 | `control.artifact_directory` | reproduce-issue | Where captures go. It must sit outside the repository. Without it, use a `qstack` folder in the operating system's temporary directory |
 | `control.artifact_retention_hours` | reproduce-issue | How long cleanup keeps captures. Without it, cleanup deletes no capture |
+| `control.recording` | reproduce-issue | Optional. `video` or `trace`, the recording a browser run makes. Without it, record a trace on Windows and a video elsewhere. Set `video` on Windows only when `video-start` opens no window there |
 | `routing.map_path` | triage-defect | Optional. The completed copy of [the routing example](../../triage-defect/references/routing.example.md) |
 | `tracker.adapter_skill_name` | triage-defect | Optional. The skill that searches and writes the issue tracker |
 | `slack.operations_channel_id` | reproduce-issue | Optional. The channel for the one automated status message |

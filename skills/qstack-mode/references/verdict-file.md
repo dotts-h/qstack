@@ -31,7 +31,7 @@ Write each field once, on its own line, in `## Surface and runs`.
 - `Surface:` names the UI, CLI, API, service, browser, desktop, mobile, harness, or trace surface.
 - `Environment:` names the build or revision, or the URL and the date when no revision can be read. It also names the platform, and the data set and the seed when the product takes them.
 - `Order:` names the run order and the reset between runs, such as a fresh process or profile.
-- `Runs: K of N` counts N runs that reached the divergence. K of them showed the broken state. A run showed it when one of its own artifacts shows it, such as its video, its screenshot, or its run log. The video alone is enough when the state was gone before the screenshot.
+- `Runs: K of N` counts N runs that reached the divergence. K of them showed the broken state. A run showed it when one of its own artifacts shows it, such as its recording, its screenshot, or its run log. The recording alone is enough when the state was gone before the screenshot.
 - `Baseline runs: K of N` and `Patched runs: K of N` replace `Runs:` when you verify a fix.
 - `Pass-to-fail:` names the checks that passed on the baseline and fail on the patched revision, or says `none`.
 - `Timing:` marks a timing verdict, whose broken state is a duration. It names the clock that timed each run, such as the page's performance timeline. Leave it out of every other verdict.

@@ -70,7 +70,7 @@ Read [`references/control-adapter.md`](references/control-adapter.md) and the co
 
 Read the feature-map section that matches the reported user path before driving. If no section covers the feature, mark the run blocked. Do not invent a path or a selector.
 
-Require every capability in the control-adapter contract, including bring-up, real UI or CLI driving, read-only inspection, screenshots, recording, reset, and cleanup. Screenshots alone do not satisfy recording. If any required capability is missing, the outcome is `Blocked`.
+Require every capability in the control-adapter contract, including bring-up, real UI or CLI driving, read-only inspection, screenshots, recording, reset, and cleanup. Screenshots alone do not satisfy recording. A timing verdict whose runs [Browser targets](references/control-adapter.md#browser-targets) leaves with no recording cites its timing data instead. If any required capability is missing, the outcome is `Blocked`.
 
 ## 3. Study the report
 
