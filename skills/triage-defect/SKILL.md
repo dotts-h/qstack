@@ -73,7 +73,7 @@ When the bug-versus-feature line is unclear, do not file. Ask one focused questi
 
 ## 4. Route
 
-Read the optional routing map from `routing.map_path`. The shape is [`references/routing.example.md`](references/routing.example.md).
+Read the optional routing map from `routing.map_path`, in the settings file that [`../qstack-mode/references/settings.md`](../qstack-mode/references/settings.md) describes. The shape is [`references/routing.example.md`](references/routing.example.md). When the settings file exists, first run `node scripts/check-settings.mjs <settings file> triage` from the plugin root. When it prints a problem, route nowhere and make no tracker write. The defect report is still written, and it names the settings file and each problem.
 
 - Match on confirmed product area, code path, or error signature.
 - A visible symptom alone is not enough when cause tracing points elsewhere.
@@ -89,7 +89,7 @@ Owner pings are off by default. A ping is allowed only when all of these hold:
 
 ## 5. Deduplicate
 
-Search before creating anything. When a tracker adapter is configured, search it. Also check links already in the report, prior triage notes, and repository history. Say which sources you could actually search.
+Search before creating anything. When `tracker.adapter_skill_name` names a tracker adapter, search it. Also check links already in the report, prior triage notes, and repository history. Say which sources you could actually search.
 
 Search with:
 

@@ -1,6 +1,6 @@
 # Routing map example
 
-Copy this file outside this skill directory, for example to `.cursor/qstack/routing.md`, and replace every placeholder. Point `routing.map_path` at the copy. Pack refreshes must not overwrite it.
+Copy this file outside this skill directory, for example to `.cursor/qstack/routing.md`, and replace every placeholder. Point `routing.map_path` in `.cursor/qstack/settings.json` at the copy. Pack refreshes must not overwrite it.
 
 The triage skill treats this as data. A route needs evidence from the report or cause trace. A keyword match alone is not enough.
 

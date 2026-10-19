@@ -2,7 +2,7 @@
 
 Map every user-facing feature reproduce-issue may reproduce. Read the relevant section before driving the app. Keep this map at the user point of view. Discover internals and current code paths at runtime instead of freezing them here.
 
-Copy this file outside this skill directory, for example to `.cursor/qstack/feature-map.md`, and set `control.feature_map_path` to the copy. Pack refreshes must not overwrite it.
+Copy this file outside this skill directory, for example to `.cursor/qstack/feature-map.md`, and set `control.feature_map_path` in `.cursor/qstack/settings.json` to the copy. Pack refreshes must not overwrite it.
 
 ## Per-feature template
 

@@ -94,4 +94,4 @@ The baseline does not reproduce, the patched app cannot run, or the evidence doe
 
 ## Cleanup
 
-Stop both builds, remove temporary profiles and captures according to retention policy, and return the repository to its prior state without discarding user work.
+Stop both builds, remove temporary profiles and captures as `control.artifact_retention_hours` allows, and return the repository to its prior state without discarding user work.
