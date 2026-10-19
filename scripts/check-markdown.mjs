@@ -4,6 +4,7 @@ import path from "node:path";
 import process from "node:process";
 
 const root = process.cwd();
+const DECLARED = /paths are relative to `([^`]+)`/i;
 const problems = [];
 const fail = (where, message) => problems.push(`${where}: ${message}`);
 
@@ -37,7 +38,11 @@ for (const file of files) {
 		if (lines.length > 500) fail(rel, `${lines.length} lines`);
 	}
 	const skillRoot = rel.startsWith("skills") ? path.join(root, ...rel.split(path.sep).slice(0, 2)) : root;
-	const bases = [path.dirname(file), skillRoot, root];
+	const declared = text.match(DECLARED)?.[1];
+	if (declared && !fs.existsSync(path.resolve(root, declared))) fail(rel, `declared base not found ${declared}`);
+	const bases = declared ? [path.dirname(path.resolve(root, declared))] : [path.dirname(file), skillRoot, root];
+	const siblings = /named below sit in this folder/.test(text);
+	const relativeTo = declared ? ` relative to ${declared}` : "";
 	let fence = false;
 	lines.forEach((line, i) => {
 		const where = `${rel}:${i + 1}`;
@@ -57,9 +62,12 @@ for (const file of files) {
 				fail(where, `anchor not found ${target}${anchor}`);
 			}
 		}
-		for (const [, token] of line.replace(/\[`[^`]+`\]/g, "").matchAll(/`([^`\s<>*]+\.(?:md|mjs))`/g)) {
+		for (const [, token] of line.replace(DECLARED, "").replace(/\[`[^`]+`\]/g, "").matchAll(/`([^`\s<>*]+\.(?:md|mjs))`/g)) {
 			if (token.startsWith(".cursor/")) continue;
-			if (!bases.some((base) => fs.existsSync(path.resolve(base, token)))) fail(where, `path not found ${token}`);
+			const sibling = siblings && !token.includes("/") && fs.existsSync(path.resolve(path.dirname(file), token));
+			if (!sibling && !bases.some((base) => fs.existsSync(path.resolve(base, token)))) {
+				fail(where, `path not found ${token}${relativeTo}`);
+			}
 		}
 	});
 }

@@ -6,7 +6,7 @@ Bundled skill paths are relative to `skills/qstack-mode/SKILL.md`. Playbooks nam
 
 1. Log each phase decision from the plugin root with `node scripts/log.mjs <logfile> <phase> <decision> <why> <evidence> <result>`.
 2. Resolve the forge before you read pull requests. `gh` is the default. If `origin` is on PATH and Origin can resolve the repository, use `origin pr` for every pull request operation. Record a fallback to `gh`. Never require `gt`.
-3. Require a user-run verdict from an agent that did not author the diff. That agent drives the real UI, CLI, or service. Put the absolute path of `../SKILL.md` in its prompt. Use subagent type `qstack-agent` when it is registered. Otherwise use `generalPurpose`. Green CI is not a verdict. An approving bot review is not a verdict.
+3. Require a user-run verdict from an agent that did not author the diff. That agent drives the real UI, CLI, or service. Put the absolute path of `../qstack-mode/SKILL.md` in its prompt. Use subagent type `qstack-agent` when it is registered. Otherwise use `generalPurpose`. Green CI is not a verdict. An approving bot review is not a verdict.
 4. When CI is red, open `flake-triage.md` before any retrigger.
 5. When the diff touches a measured metric, open `perf-gate.md`.
 6. Walk upward from the lowest unmerged pull request. Stop at the first pull request that lacks `PASS` or `PASS+NOTES`. A verified pull request above that stop waits.

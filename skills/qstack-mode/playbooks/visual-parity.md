@@ -2,7 +2,7 @@
 
 **You own the change report.** A pixel delta proves that a state changed. A person decides whether the change was intended. Do not touch the baseline to make a diff pass.
 
-Bundled skill paths are relative to `skills/qstack-mode/SKILL.md`.
+Bundled skill paths are relative to `skills/qstack-mode/SKILL.md`. Playbooks named below sit in this folder.
 
 1. Log each phase decision from the plugin root with `node scripts/log.mjs <logfile> <phase> <decision> <why> <evidence> <result>`.
 2. Capture baseline screenshots across each state of the component before any change. The baseline is the side you compare against. For a code change, it is the revision before the change, or the parent revision when the change is already in the tree. For a comparison of accounts or environments, it is the account or environment you compare against. Take full-page captures, because a viewport capture depends on the scroll position that an earlier state left. Without a baseline you have no parity claim.
