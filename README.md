@@ -30,7 +30,7 @@ There are seven focused playbooks.
 
 - [Diagnose live](skills/qstack-mode/playbooks/diagnose-live.md) diagnoses a live CPU, heap, or CDP symptom.
 - [Diagnose trace](skills/qstack-mode/playbooks/diagnose-trace.md) diagnoses a captured cpuprofile, trace, or heapsnapshot.
-- [Visual parity](skills/qstack-mode/playbooks/visual-parity.md) compares screenshots against a baseline and routes each change to a person.
+- [Visual parity](skills/qstack-mode/playbooks/visual-parity.md) compares screenshots against a baseline, routes each visual change to a person, and sends each behavior change to reproduce and triage.
 - [Characterization pin](skills/qstack-mode/playbooks/characterization-pin.md) records current behavior before structure moves.
 - [Regression lane](skills/qstack-mode/playbooks/regression-lane.md) runs one load-bearing scenario on trunk and on head.
 - [Flake triage](skills/qstack-mode/playbooks/flake-triage.md) classifies a red CI check before any retrigger.
